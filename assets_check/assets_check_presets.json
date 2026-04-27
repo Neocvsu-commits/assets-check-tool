@@ -1,0 +1,30 @@
+{
+  "默认预设": {
+    "chk_ngon": true,
+    "chk_empty_material_slot": true,
+    "chk_transform": true,
+    "chk_missing_textures": true,
+    "chk_uv_bounds": true,
+    "chk_uv_overlap": true,
+    "chk_uv_layer_count": true,
+    "chk_vertex_color_count": true,
+    "chk_ignore_uv0": true,
+    "chk_non_manifold": true,
+    "chk_ignore_manifold_open": true,
+    "chk_loose_geometry": true,
+    "chk_doubled_vertices": true,
+    "chk_poles": true,
+    "chk_normal_direction": true,
+    "chk_nonplanar_faces": true,
+    "chk_self_intersection": true,
+    "chk_zero_edges": true,
+    "chk_apply_scale": true,
+    "chk_transform_zero": true,
+    "chk_pivot_position": true,
+    "chk_modifier": true,
+    "chk_animation": true,
+    "chk_vertex_weight": true,
+    "chk_collision": true,
+    "chk_ue_vertex_color_naming": true
+  }
+}

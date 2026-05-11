@@ -1,5 +1,6 @@
 import os
 import bpy
+import bpy.utils.previews
 
 _icons = None
 

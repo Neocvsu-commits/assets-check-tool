@@ -515,7 +515,7 @@ def draw_assets_check_next_content(layout, context):
         "wm.url_open",
         text="匿名反馈",
         icon="COMMUNITY",
-    ).url = "https://docs.qq.com/form/page/DTnV6S25STkxJR0Zy"
+    ).url = "https://docs.qq.com/form/page/DTkNKUE9RcUpOemRr"
     fb_row2 = feedback_box.row()
     fb_row2.operator(
         "wm.url_open",

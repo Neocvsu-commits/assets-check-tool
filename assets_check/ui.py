@@ -274,8 +274,8 @@ def draw_assets_check_next_content(layout, context):
         if len(props.presets_collection) == 0:
             try:
                 props_store.sync_preset_collection(props)
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"[AssetsCheck] 同步预设失败: {e}")
 
         box_presets = checks_box.box()
         row_preset = box_presets.row(align=True)

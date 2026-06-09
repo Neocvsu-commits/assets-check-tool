@@ -129,8 +129,8 @@ def register():
     bpy.types.Scene.ac_ui_state = bpy.props.PointerProperty(type=properties.AssetsCheckUIState)
     try:
         properties.sync_preset_collection(bpy.context.scene.assets_check_next_props)
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"[AssetsCheck] 预设同步失败: {e}")
     bpy.types.TOPBAR_MT_editor_menus.append(_draw_topbar_entry)
 
     # 后台检查更新

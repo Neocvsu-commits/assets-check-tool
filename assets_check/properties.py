@@ -40,31 +40,74 @@ def default_preset_all_enabled():
     return {k: True for k in DEFAULT_CHK_PRESET_KEYS}
 
 
+# 内置三套预设，load_presets() 返回的 dict 中少于 3 个时自动补齐
+BUILTIN_PRESETS = {
+    "默认预设": {k: True for k in DEFAULT_CHK_PRESET_KEYS},
+    "项目模型": {
+        "chk_ngon": True, "chk_empty_material_slot": True, "chk_transform": True,
+        "chk_missing_textures": True, "chk_uv_bounds": False, "chk_uv_overlap": False,
+        "chk_uv_layer_count": True, "chk_vertex_color_count": True, "chk_ignore_uv0": True,
+        "chk_non_manifold": True, "chk_ignore_manifold_open": True, "chk_loose_geometry": True,
+        "chk_doubled_vertices": True, "chk_poles": True, "chk_normal_direction": True,
+        "chk_nonplanar_faces": True, "chk_self_intersection": True, "chk_zero_edges": True,
+        "chk_apply_scale": True, "chk_transform_zero": True, "chk_pivot_position": True,
+        "chk_modifier": True, "chk_animation": True, "chk_vertex_weight": True,
+        "chk_collision": True, "chk_ue_vertex_color_naming": True,
+    },
+    "资产模型": {
+        "chk_ngon": True, "chk_empty_material_slot": True, "chk_transform": True,
+        "chk_missing_textures": True, "chk_uv_bounds": True, "chk_uv_overlap": True,
+        "chk_uv_layer_count": True, "chk_vertex_color_count": True, "chk_ignore_uv0": False,
+        "chk_non_manifold": True, "chk_ignore_manifold_open": True, "chk_loose_geometry": True,
+        "chk_doubled_vertices": True, "chk_poles": True, "chk_normal_direction": True,
+        "chk_nonplanar_faces": True, "chk_self_intersection": True, "chk_zero_edges": True,
+        "chk_apply_scale": True, "chk_transform_zero": True, "chk_pivot_position": True,
+        "chk_modifier": True, "chk_animation": True, "chk_vertex_weight": True,
+        "chk_collision": True, "chk_ue_vertex_color_naming": True,
+    },
+}
+
+
+def _ensure_builtin_presets(data):
+    """如果 data 缺少内置预设则自动补充。"""
+    changed = False
+    for name, cfg in BUILTIN_PRESETS.items():
+        if name not in data:
+            data[name] = dict(cfg)
+            changed = True
+    return changed
+
+
 def _preset_file_path():
     return os.path.join(os.path.dirname(__file__), "assets_check_presets.json")
 
 
 def load_presets():
     file_path = _preset_file_path()
+    data = {}
     if os.path.exists(file_path):
         try:
             with open(file_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            if isinstance(data, dict) and data:
-                if data.get("默认预设") == {}:
-                    data["默认预设"] = default_preset_all_enabled()
-                return data
-        except Exception:
-            pass
-    return {"默认预设": default_preset_all_enabled()}
+        except Exception as e:
+            print(f"[AssetsCheck] 加载预设失败: {e}")
+    if not isinstance(data, dict) or not data:
+        data = {"默认预设": default_preset_all_enabled()}
+
+    if _ensure_builtin_presets(data):
+        save_presets(data)
+
+    if data.get("默认预设") == {}:
+        data["默认预设"] = default_preset_all_enabled()
+    return data
 
 
 def save_presets(data):
     try:
         with open(_preset_file_path(), "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"[AssetsCheck] 保存预设失败: {e}")
 
 
 def collect_preset_data(props):

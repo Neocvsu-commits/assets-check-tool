@@ -91,6 +91,7 @@ def _enabled_check_ids(cfg):
     mapping = [
         ("chk_empty_material_slot", "empty_material_slot"),
         ("chk_missing_textures", "missing_textures"),
+        ("chk_transform", "transform"),
         ("chk_uv_bounds", "uv_bounds"),
         ("chk_uv_overlap", "uv_overlap"),
         ("chk_uv_layer_count", "uv_layer_count"),

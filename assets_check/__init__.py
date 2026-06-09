@@ -121,16 +121,14 @@ def _draw_topbar_entry(self, context):
 
 
 def register():
+    global _register_handlers
+    _register_handlers = []
     icon_manager.load_icons()
     for cls in CLASSES:
         bpy.utils.register_class(cls)
     bpy.types.Scene.assets_check_next_props = bpy.props.PointerProperty(type=properties.ASSETSCHECKNEXT_Props)
     bpy.types.Scene.assets_check_next_results = bpy.props.CollectionProperty(type=properties.ASSETSCHECKNEXT_ResultItem)
     bpy.types.Scene.ac_ui_state = bpy.props.PointerProperty(type=properties.AssetsCheckUIState)
-    try:
-        properties.sync_preset_collection(bpy.context.scene.assets_check_next_props)
-    except Exception as e:
-        print(f"[AssetsCheck] 预设同步失败: {e}")
     bpy.types.TOPBAR_MT_editor_menus.append(_draw_topbar_entry)
 
     # 后台检查更新
@@ -145,9 +143,26 @@ def register():
     except Exception:
         pass
 
+    # 预设同步：不能在 register() 里直接操作 scene，用 load_post 延迟
+    def _delayed_sync_presets(_dummy):
+        try:
+            props = bpy.context.scene.assets_check_next_props
+            properties.sync_preset_collection(props)
+        except Exception as e:
+            print(f"[AssetsCheck] 延迟预设同步失败: {e}")
+        return None
+    bpy.app.handlers.load_post.append(_delayed_sync_presets)
+    _register_handlers.append(("load_post", _delayed_sync_presets))
+
 
 def unregister():
-    global _icons
+    global _icons, _register_handlers
+    # 清理 load_post handler
+    for handler_type, handler in _register_handlers:
+        handler_list = getattr(bpy.app.handlers, handler_type, None)
+        if handler_list is not None and handler in handler_list:
+            handler_list.remove(handler)
+    _register_handlers = []
     try:
         bpy.types.TOPBAR_MT_editor_menus.remove(_draw_topbar_entry)
     except Exception:

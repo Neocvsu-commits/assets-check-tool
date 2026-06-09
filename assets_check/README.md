@@ -1,4 +1,4 @@
-# Assets Check Next
+# Assets Check Next (v2.1.0)
 
 这是 `Assets_Check` 的并行重构版本，当前已完成检查内核 A/B/C/D 四组能力接入，并保持旧版风格 UI。
 

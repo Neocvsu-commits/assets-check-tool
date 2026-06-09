@@ -1559,3 +1559,58 @@ class ASSETSCHECKNEXT_MT_QF_SelfIntersection(bpy.types.Menu):
 
     def draw(self, context):
         self.layout.operator("assets_check_next.locate_self_intersection", text="定位交叉面")
+
+
+# ============================================================
+# 自动更新
+# ============================================================
+
+class ASSETSCHECKNEXT_OT_CheckUpdate(bpy.types.Operator):
+    """检查 GitHub 上是否有新版本发布"""
+    bl_idname = "assets_check_next.check_update"
+    bl_label = "检查更新"
+    bl_description = "立即检查 GitHub 是否有新版本发布"
+
+    def execute(self, context):
+        try:
+            from .update_checker import force_check_for_updates
+            from . import bl_info as addon_bl_info
+
+            force_check_for_updates(
+                "Neocvsu-commits",
+                "assets-check-tool",
+                addon_bl_info["version"],
+                os.path.dirname(__file__),
+            )
+            self.report({"INFO"}, "已发起更新检查，请稍后查看面板顶部")
+        except ImportError:
+            self.report({"ERROR"}, "更新模块不可用")
+        except Exception as e:
+            self.report({"ERROR"}, f"检查失败: {e}")
+        return {"FINISHED"}
+
+
+class ASSETSCHECKNEXT_OT_InstallUpdate(bpy.types.Operator):
+    """从 GitHub 下载最新版本并自动覆盖安装，需重启 Blender 生效"""
+    bl_idname = "assets_check_next.install_update"
+    bl_label = "下载并安装更新"
+    bl_description = "从 GitHub 下载最新版本并自动覆盖安装，需重启 Blender 生效"
+
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def execute(self, context):
+        try:
+            from .update_checker import install_update
+        except ImportError:
+            self.report({"ERROR"}, "更新模块不可用，请手动更新")
+            return {"CANCELLED"}
+
+        plugin_dir = os.path.dirname(__file__)
+        success, msg = install_update("Neocvsu-commits", "assets-check-tool", plugin_dir=plugin_dir)
+        if success:
+            self.report({"INFO"}, msg)
+        else:
+            self.report({"ERROR"}, msg)
+        return {"FINISHED"}

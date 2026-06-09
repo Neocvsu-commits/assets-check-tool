@@ -1,7 +1,7 @@
 bl_info = {
     "name": "资产审查助手",
     "author": "Neo",
-    "version": (2, 0, 1),
+    "version": (2, 1, 0),
     "blender": (4, 2, 0),
     "location": "3D 视图 > 顶栏「检查」",
     "description": "资产网格与数据检查、快速修复与报告导出（正式版）",
@@ -9,11 +9,14 @@ bl_info = {
 }
 
 import bpy
+import os
 
 if "bpy" in locals():
     import importlib
     if "icon_manager" in locals():
         importlib.reload(icon_manager)
+    if "update_checker" in locals():
+        importlib.reload(update_checker)
     if "properties" in locals():
         importlib.reload(properties)
     if "checks" in locals():
@@ -26,6 +29,7 @@ if "bpy" in locals():
         importlib.reload(ui)
 
 from . import icon_manager
+from . import update_checker
 from . import properties
 from . import checks
 from . import services
@@ -106,6 +110,8 @@ CLASSES = (
     operators.ASSETSCHECKNEXT_OT_OpenPopup,
     operators.ASSETSCHECKNEXT_OT_SelectAllMeshes,
     operators.ASSETSCHECKNEXT_OT_SelectByResult,
+    operators.ASSETSCHECKNEXT_OT_CheckUpdate,
+    operators.ASSETSCHECKNEXT_OT_InstallUpdate,
     ui.ASSETSCHECKNEXT_UL_PresetList,
 )
 
@@ -126,6 +132,18 @@ def register():
     except Exception:
         pass
     bpy.types.TOPBAR_MT_editor_menus.append(_draw_topbar_entry)
+
+    # 后台检查更新
+    try:
+        from .update_checker import check_for_updates
+        check_for_updates(
+            owner="Neocvsu-commits",
+            repo="assets-check-tool",
+            current_version=bl_info["version"],
+            plugin_dir=os.path.dirname(__file__),
+        )
+    except Exception:
+        pass
 
 
 def unregister():

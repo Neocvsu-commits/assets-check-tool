@@ -217,7 +217,48 @@ def _display_object_name(raw_name: str) -> str:
     return raw_name or ""
 
 
+def _draw_update_banner(layout):
+    """面板顶部：版本状态 + 刷新按钮。"""
+    try:
+        from .update_checker import get_update_info, get_check_status
+    except ImportError:
+        return
+
+    row = layout.row(align=True)
+    status = get_check_status("Neocvsu-commits", "assets-check-tool")
+    st = status.get("status", "pending")
+
+    if st == "checking":
+        row.label(text="正在检查更新...", icon="SORTTIME")
+    elif st == "error":
+        row.label(text=f"更新检查失败: {status.get('error', '未知错误')}", icon="CANCEL")
+    elif st == "no_release":
+        row.label(text="暂无可获取的 Release", icon="INFO")
+    elif st == "no_update" and status.get("current_version"):
+        row.label(text=f"已是最新版本 v{status['current_version']}", icon="CHECKMARK")
+    elif st == "pending":
+        row.label(text="等待更新检查...", icon="TIME")
+
+    row.operator("assets_check_next.check_update", text="", icon="FILE_REFRESH")
+
+    info = get_update_info("Neocvsu-commits", "assets-check-tool")
+    if not info:
+        return
+    box = layout.box()
+    box.alert = True
+    col = box.column(align=True)
+    col.label(text=f" 当前版本: v{info['current_version']}", icon="INFO")
+    col.label(text=f" 最新版本: v{info['latest_version']}", icon="URL")
+    row = col.row(align=True)
+    row.operator("wm.url_open", text="查看 Release", icon="URL").url = info["html_url"]
+    row.operator("assets_check_next.install_update", text="一键更新", icon="IMPORT")
+
+
 def draw_assets_check_next_content(layout, context):
+    """绘制完整的资产检查面板内容，供弹窗/Panel 共用。"""
+    # ---- 更新 Banner ----
+    _draw_update_banner(layout)
+
     scene = context.scene
     props = scene.assets_check_next_props
     ui_state = scene.ac_ui_state
@@ -459,6 +500,28 @@ def draw_assets_check_next_content(layout, context):
                     spacer = col_dot.column(align=True)
                     spacer.scale_y = 1e-9
                     spacer.label(text="")
+
+    # ---- 反馈 & 支持 ----
+    layout.separator()
+    feedback_box = layout.box()
+    feedback_box.label(text="反馈 & 支持", icon="HELP")
+    fb_row = feedback_box.row(align=True)
+    fb_row.operator(
+        "wm.url_open",
+        text="Bug / 功能建议",
+        icon="GHOST_ENABLED",
+    ).url = "https://github.com/Neocvsu-commits/assets-check-tool/issues/new"
+    fb_row.operator(
+        "wm.url_open",
+        text="匿名反馈",
+        icon="COMMUNITY",
+    ).url = "https://docs.qq.com/form/page/DTnV6S25STkxJR0Zy"
+    fb_row2 = feedback_box.row()
+    fb_row2.operator(
+        "wm.url_open",
+        text="⭐ 作者主页（了解更多工具）",
+        icon="URL",
+    ).url = "https://github.com/Neocvsu-commits"
 
 
 class ASSETSCHECK_PT_main_panel(bpy.types.Panel):

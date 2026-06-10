@@ -490,7 +490,14 @@ def draw_assets_check_next_content(layout, context):
                     display_value = str(cell_data.get("display_value", ""))
 
                 if display_value != "":
-                    cell.label(text=display_value)
+                    row = cell.row(align=True)
+                    row.label(text=display_value)
+                    if cid in {"uv_layer_count", "vertex_color_count"}:
+                        try:
+                            if int(display_value) > 1:
+                                row.template_node_socket(color=(0.8, 0.8, 0.2, 1.0))
+                        except ValueError:
+                            pass
                 elif cid in {"uv_layer_count", "vertex_color_count"}:
                     cell.label(text="0")
                 else:

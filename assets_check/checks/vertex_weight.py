@@ -1,4 +1,4 @@
-def run(obj, context):
+def run(obj, context, props):
     has_armature = any(m.type == "ARMATURE" for m in obj.modifiers)
     has_armature_parent = (
         getattr(obj, "parent", None) is not None

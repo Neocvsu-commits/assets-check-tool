@@ -1,12 +1,12 @@
-import bmesh
 from mathutils.bvhtree import BVHTree
 
+from .common import build_bmesh
 
-def run(obj, context):
-    bm = bmesh.new()
-    bm.from_mesh(obj.data)
-    bm.verts.ensure_lookup_table()
-    bm.faces.ensure_lookup_table()
+
+def run(obj, context, props, *, bm=None):
+    _own = bm is None
+    if _own:
+        bm = build_bmesh(obj.data)
     try:
         if len(bm.faces) < 2:
             return {"check_id": "self_intersection", "status": "PASS", "message": "面数过少，无交叉风险"}
@@ -29,4 +29,5 @@ def run(obj, context):
     except Exception:
         return {"check_id": "self_intersection", "status": "WARN", "message": "交叉边面检查失败，建议手动复核"}
     finally:
-        bm.free()
+        if _own:
+            bm.free()

@@ -1,4 +1,4 @@
-def run(obj, context):
+def run(obj, context, props):
     ad = obj.animation_data
     has_anim = bool(ad and (ad.action or ad.nla_tracks))
     if has_anim:

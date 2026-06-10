@@ -1,4 +1,4 @@
-def run(obj, context):
+def run(obj, context, props):
     has_ngon = any(poly.loop_total > 4 for poly in obj.data.polygons)
     if has_ngon:
         return {"check_id": "ngon", "status": "WARN", "message": "存在 N-gon（大于4边面）"}

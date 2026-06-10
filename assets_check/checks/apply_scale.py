@@ -1,7 +1,7 @@
 from .common import is_close
 
 
-def run(obj, context):
+def run(obj, context, props):
     s = obj.scale
     ok = is_close(s.x, 1.0) and is_close(s.y, 1.0) and is_close(s.z, 1.0)
     if ok:

@@ -2,7 +2,7 @@ import bpy
 import os
 
 
-def run(obj, context):
+def run(obj, context, props):
     missing = []
     for slot in obj.material_slots:
         mat = slot.material

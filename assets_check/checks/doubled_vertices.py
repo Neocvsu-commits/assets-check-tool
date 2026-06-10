@@ -2,7 +2,7 @@ import bmesh as _bmesh
 from .common import build_bmesh
 
 
-def run(obj, context):
+def run(obj, context, props):
     bm = build_bmesh(obj.data)
     try:
         v_count = len(bm.verts)

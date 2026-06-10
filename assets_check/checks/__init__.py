@@ -23,76 +23,94 @@ from .animation import run as run_animation
 from .vertex_weight import run as run_vertex_weight
 from .collision import run as run_collision
 
-
-def _call_check(fn, obj, context, props):
-    """
-    兼容旧版/新版检查函数签名：
-    - 旧版: run(obj, context)
-    - 新版: run(obj, context, props)
-    """
-    try:
-        return fn(obj, context, props)
-    except TypeError:
-        return fn(obj, context)
+from .common import build_bmesh
 
 
-def run_checks_for_object(obj, context, props):
+def _call_check(fn, obj, context, props, **kwargs):
+    """bmesh/collision 检查可传入共享资源；不接受的函数忽略多余 kwarg."""
+    if kwargs:
+        try:
+            return fn(obj, context, props, **kwargs)
+        except TypeError:
+            return fn(obj, context, props)
+    return fn(obj, context, props)
+
+
+def run_checks_for_object(obj, context, props, *, colliders=None):
     rows = []
-    # 基础项
-    if props.chk_ngon:
-        rows.append(_call_check(run_ngon, obj, context, props))
-    if props.chk_empty_material_slot:
-        rows.append(_call_check(run_empty_material_slot, obj, context, props))
-    if props.chk_transform:
-        rows.append(_call_check(run_transform, obj, context, props))
-    if props.chk_missing_textures:
-        rows.append(_call_check(run_missing_textures, obj, context, props))
-    if props.chk_uv_bounds:
-        rows.append(_call_check(run_uv_bounds, obj, context, props))
-    if props.chk_uv_overlap:
-        rows.append(_call_check(run_uv_overlap, obj, context, props))
 
-    # A: 拓扑包
-    if props.chk_non_manifold:
-        rows.append(_call_check(run_non_manifold, obj, context, props))
-    if props.chk_loose_geometry:
-        rows.append(_call_check(run_loose_geometry, obj, context, props))
-    if props.chk_doubled_vertices:
-        rows.append(_call_check(run_doubled_vertices, obj, context, props))
-    if props.chk_poles:
-        rows.append(_call_check(run_poles, obj, context, props))
+    # 判断是否需要共享 bmesh（任一拓扑/法线几何检查开启）
+    _need_bm = any([
+        props.chk_non_manifold,
+        props.chk_loose_geometry,
+        props.chk_poles,
+        props.chk_nonplanar_faces,
+        props.chk_self_intersection,
+        props.chk_zero_edges,
+    ])
+    shared_bm = None
+    if _need_bm and obj.type == 'MESH' and obj.data.vertices:
+        shared_bm = build_bmesh(obj.data)
 
-    # B: 法线/几何包
-    if props.chk_normal_direction:
-        rows.append(_call_check(run_normal_direction, obj, context, props))
-    if props.chk_nonplanar_faces:
-        rows.append(_call_check(run_nonplanar_faces, obj, context, props))
-    if props.chk_self_intersection:
-        rows.append(_call_check(run_self_intersection, obj, context, props))
-    if props.chk_zero_edges:
-        rows.append(_call_check(run_zero_edges, obj, context, props))
+    try:
+        # 基础项
+        if props.chk_ngon:
+            rows.append(_call_check(run_ngon, obj, context, props))
+        if props.chk_empty_material_slot:
+            rows.append(_call_check(run_empty_material_slot, obj, context, props))
+        if props.chk_transform:
+            rows.append(_call_check(run_transform, obj, context, props))
+        if props.chk_missing_textures:
+            rows.append(_call_check(run_missing_textures, obj, context, props))
+        if props.chk_uv_bounds:
+            rows.append(_call_check(run_uv_bounds, obj, context, props))
+        if props.chk_uv_overlap:
+            rows.append(_call_check(run_uv_overlap, obj, context, props))
 
-    # C: UV/顶点色包
-    if props.chk_uv_layer_count:
-        rows.append(_call_check(run_uv_layer_count, obj, context, props))
-    if props.chk_vertex_color_count:
-        rows.append(_call_check(run_vertex_color_count, obj, context, props))
-    if props.chk_ue_vertex_color_naming:
-        rows.append(_call_check(run_ue_vertex_color_naming, obj, context, props))
+        # A: 拓扑包
+        if props.chk_non_manifold:
+            rows.append(_call_check(run_non_manifold, obj, context, props, bm=shared_bm))
+        if props.chk_loose_geometry:
+            rows.append(_call_check(run_loose_geometry, obj, context, props, bm=shared_bm))
+        if props.chk_doubled_vertices:
+            rows.append(_call_check(run_doubled_vertices, obj, context, props))
+        if props.chk_poles:
+            rows.append(_call_check(run_poles, obj, context, props, bm=shared_bm))
 
-    # D: 物体数据包
-    if props.chk_apply_scale:
-        rows.append(_call_check(run_apply_scale, obj, context, props))
-    if props.chk_transform_zero:
-        rows.append(_call_check(run_transform_zero, obj, context, props))
-    if props.chk_pivot_position:
-        rows.append(_call_check(run_pivot_position, obj, context, props))
-    if props.chk_modifier:
-        rows.append(_call_check(run_modifier, obj, context, props))
-    if props.chk_animation:
-        rows.append(_call_check(run_animation, obj, context, props))
-    if props.chk_vertex_weight:
-        rows.append(_call_check(run_vertex_weight, obj, context, props))
-    if props.chk_collision:
-        rows.append(_call_check(run_collision, obj, context, props))
-    return rows
+        # B: 法线/几何包
+        if props.chk_normal_direction:
+            rows.append(_call_check(run_normal_direction, obj, context, props))
+        if props.chk_nonplanar_faces:
+            rows.append(_call_check(run_nonplanar_faces, obj, context, props, bm=shared_bm))
+        if props.chk_self_intersection:
+            rows.append(_call_check(run_self_intersection, obj, context, props, bm=shared_bm))
+        if props.chk_zero_edges:
+            rows.append(_call_check(run_zero_edges, obj, context, props, bm=shared_bm))
+
+        # C: UV/顶点色包
+        if props.chk_uv_layer_count:
+            rows.append(_call_check(run_uv_layer_count, obj, context, props))
+        if props.chk_vertex_color_count:
+            rows.append(_call_check(run_vertex_color_count, obj, context, props))
+        if props.chk_ue_vertex_color_naming:
+            rows.append(_call_check(run_ue_vertex_color_naming, obj, context, props))
+
+        # D: 物体数据包
+        if props.chk_apply_scale:
+            rows.append(_call_check(run_apply_scale, obj, context, props))
+        if props.chk_transform_zero:
+            rows.append(_call_check(run_transform_zero, obj, context, props))
+        if props.chk_pivot_position:
+            rows.append(_call_check(run_pivot_position, obj, context, props))
+        if props.chk_modifier:
+            rows.append(_call_check(run_modifier, obj, context, props))
+        if props.chk_animation:
+            rows.append(_call_check(run_animation, obj, context, props))
+        if props.chk_vertex_weight:
+            rows.append(_call_check(run_vertex_weight, obj, context, props))
+        if props.chk_collision:
+            rows.append(_call_check(run_collision, obj, context, props, colliders=colliders))
+        return rows
+    finally:
+        if shared_bm is not None:
+            shared_bm.free()

@@ -1,8 +1,10 @@
 from .common import build_bmesh
 
 
-def run(obj, context, props):
-    bm = build_bmesh(obj.data)
+def run(obj, context, props, *, bm=None):
+    _own = bm is None
+    if _own:
+        bm = build_bmesh(obj.data)
     try:
         ignore_open = getattr(props, "chk_ignore_manifold_open", False)
         has_bad = False
@@ -16,4 +18,5 @@ def run(obj, context, props):
             return {"check_id": "non_manifold", "status": "WARN", "message": "检测到非流形边"}
         return {"check_id": "non_manifold", "status": "PASS", "message": "未检测到非流形边"}
     finally:
-        bm.free()
+        if _own:
+            bm.free()

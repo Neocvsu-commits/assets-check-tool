@@ -1,8 +1,10 @@
 from .common import build_bmesh
 
 
-def run(obj, context):
-    bm = build_bmesh(obj.data)
+def run(obj, context, props, *, bm=None):
+    _own = bm is None
+    if _own:
+        bm = build_bmesh(obj.data)
     try:
         has_loose = False
         for v in bm.verts:
@@ -18,4 +20,5 @@ def run(obj, context):
             return {"check_id": "loose_geometry", "status": "WARN", "message": "检测到游离几何"}
         return {"check_id": "loose_geometry", "status": "PASS", "message": "未检测到游离几何"}
     finally:
-        bm.free()
+        if _own:
+            bm.free()

@@ -1,8 +1,10 @@
 from .common import build_bmesh
 
 
-def run(obj, context):
-    bm = build_bmesh(obj.data)
+def run(obj, context, props, *, bm=None):
+    _own = bm is None
+    if _own:
+        bm = build_bmesh(obj.data)
     try:
         bad = 0
         threshold = 1e-4
@@ -19,4 +21,5 @@ def run(obj, context):
             return {"check_id": "nonplanar_faces", "status": "WARN", "message": f"检测到不平整面: {bad}"}
         return {"check_id": "nonplanar_faces", "status": "PASS", "message": "未检测到不平整面"}
     finally:
-        bm.free()
+        if _own:
+            bm.free()

@@ -5,6 +5,17 @@ from .checks import run_checks_for_object
 from .properties import sync_preferences_to_scene_props
 
 
+_COLLIDER_PREFIXES = ("UCX_", "UBX_", "UCP_", "USP_")
+
+
+def _build_collider_cache(scene):
+    """预缓存场景中所有碰撞体对象（避免每个检查对象都遍历全场景）."""
+    return [
+        o for o in scene.objects
+        if o.type == "MESH" and o.name.startswith(_COLLIDER_PREFIXES)
+    ]
+
+
 def run_checks_and_store(scene, context):
     props = scene.assets_check_next_props
     sync_preferences_to_scene_props(context, props)
@@ -17,8 +28,11 @@ def run_checks_and_store(scene, context):
     warn_count = 0
     fail_count = 0
 
+    # 预缓存碰撞体（collision 检查共享）
+    collider_cache = _build_collider_cache(scene) if props.chk_collision else None
+
     for obj in mesh_objects:
-        checks = run_checks_for_object(obj, context, props)
+        checks = run_checks_for_object(obj, context, props, colliders=collider_cache)
         for row in checks:
             item = results.add()
             item.object_name = obj.name

@@ -1,7 +1,7 @@
 from .common import is_close
 
 
-def run(obj, context):
+def run(obj, context, props):
     l = obj.location
     r = obj.rotation_euler
     has_loc = not (is_close(l.x, 0.0) and is_close(l.y, 0.0) and is_close(l.z, 0.0))

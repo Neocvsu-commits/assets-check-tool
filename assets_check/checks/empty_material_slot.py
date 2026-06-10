@@ -1,4 +1,4 @@
-def run(obj, context):
+def run(obj, context, props):
     has_empty = any(slot.material is None for slot in obj.material_slots)
     if has_empty:
         return {"check_id": "empty_material_slot", "status": "FAIL", "message": "存在空材质槽"}

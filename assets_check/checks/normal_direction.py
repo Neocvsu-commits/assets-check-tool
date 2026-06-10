@@ -1,7 +1,7 @@
 import bmesh
 
 
-def run(obj, context):
+def run(obj, context, props):
     me = obj.data
     if me.has_custom_normals:
         return {"check_id": "normal_direction", "status": "PASS", "message": "使用自定义法线，跳过"}

@@ -1,7 +1,7 @@
 import re
 
 
-def run(obj, context, props=None):
+def run(obj, context, props):
     pattern = re.compile(r'^[a-zA-Z0-9_]+$')
 
     if not (pattern.match(obj.name) and obj.name.startswith("SM_")):

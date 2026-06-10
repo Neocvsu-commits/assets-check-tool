@@ -1,4 +1,4 @@
-def run(obj, context):
+def run(obj, context, props):
     loc = obj.location
     rot = obj.rotation_euler
     scale = obj.scale

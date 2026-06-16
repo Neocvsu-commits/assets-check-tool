@@ -1,7 +1,7 @@
 bl_info = {
     "name": "资产审查助手",
     "author": "Neo",
-    "version": (2, 1, 5),
+    "version": (2, 1, 6),
     "blender": (4, 2, 0),
     "location": "3D 视图 > 顶栏「检查」",
     "description": "资产网格与数据检查、快速修复与报告导出（正式版）",
@@ -44,6 +44,8 @@ CLASSES = (
     properties.ASSETSCHECKNEXT_PresetItem,
     properties.ASSETSCHECKNEXT_Props,
     operators.ASSETSCHECKNEXT_OT_PresetSave,
+    operators.ASSETSCHECKNEXT_OT_PresetQuickSave,
+    operators.ASSETSCHECKNEXT_OT_PresetResetDefault,
     operators.ASSETSCHECKNEXT_OT_PresetRemoveActive,
     operators.ASSETSCHECKNEXT_OT_PresetImport,
     operators.ASSETSCHECKNEXT_OT_PresetExportDialog,

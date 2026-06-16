@@ -11,6 +11,7 @@ from bpy_extras.io_utils import ExportHelper, ImportHelper
 
 from .services import run_checks_and_store
 from .properties import (
+    apply_preset_data,
     collect_preset_data,
     default_preset_all_enabled,
     load_presets,
@@ -128,6 +129,48 @@ class ASSETSCHECKNEXT_OT_PresetSave(bpy.types.Operator):
                 props.active_preset_index = i
                 break
         self.report({"INFO"}, f"保存预设: {name}")
+        return {"FINISHED"}
+
+
+class ASSETSCHECKNEXT_OT_PresetQuickSave(bpy.types.Operator):
+    bl_idname = "assets_check_next.preset_quick_save"
+    bl_label = "保存"
+    bl_description = "将当前勾选状态覆盖写入当前选中的预设"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        props = context.scene.assets_check_next_props
+        addon = context.preferences.addons.get(__package__)
+        cfg = addon.preferences if addon else props
+        idx = props.active_preset_index
+        if idx < 0 or idx >= len(props.presets_collection):
+            self.report({"WARNING"}, "未选中预设")
+            return {"CANCELLED"}
+        name = props.presets_collection[idx].name
+        data = load_presets()
+        data[name] = collect_preset_data(cfg)
+        save_presets(data)
+        self.report({"INFO"}, f"已保存到预设: {name}")
+        return {"FINISHED"}
+
+
+class ASSETSCHECKNEXT_OT_PresetResetDefault(bpy.types.Operator):
+    bl_idname = "assets_check_next.preset_reset_default"
+    bl_label = "默认预设"
+    bl_description = "恢复为初始默认设置（全部检查项开启）"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        props = context.scene.assets_check_next_props
+        addon = context.preferences.addons.get(__package__)
+        if addon and addon.preferences:
+            apply_preset_data(addon.preferences, default_preset_all_enabled())
+        sync_preset_collection(props)
+        for i, item in enumerate(props.presets_collection):
+            if item.name == "默认预设":
+                props.active_preset_index = i
+                break
+        self.report({"INFO"}, "已恢复为默认预设")
         return {"FINISHED"}
 
 

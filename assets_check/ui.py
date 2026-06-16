@@ -297,6 +297,8 @@ def draw_assets_check_next_content(layout, context):
         col_preset_ops.operator("assets_check_next.preset_save", text="", icon="ADD")
         col_preset_ops.operator("assets_check_next.preset_remove_active", text="", icon="X")
         row_io = box_presets.row(align=True)
+        row_io.operator("assets_check_next.preset_quick_save", text="保存", icon="FILE_TICK")
+        row_io.operator("assets_check_next.preset_reset_default", text="默认预设", icon="LOOP_BACK")
         row_io.operator("assets_check_next.preset_import", text="导入预设", icon="IMPORT")
         row_io.operator("assets_check_next.preset_export_dialog", text="导出预设", icon="EXPORT")
 

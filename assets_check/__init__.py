@@ -1,7 +1,7 @@
 bl_info = {
     "name": "资产审查助手",
     "author": "Neo",
-    "version": (2, 1, 9),
+    "version": (3, 0, 0),
     "blender": (4, 2, 0),
     "location": "3D 视图 > 顶栏「检查」",
     "description": "资产网格与数据检查、快速修复与报告导出（正式版）",
@@ -150,15 +150,30 @@ def register():
         pass
 
     # 预设同步：不能在 register() 里直接操作 scene，用 load_post 延迟
-    def _delayed_sync_presets(_dummy):
+    def _delayed_init(_dummy):
         try:
             props = bpy.context.scene.assets_check_next_props
             properties.sync_preset_collection(props)
+
+            # 从预设 JSON 加载当前选中预设到 addon preferences，覆盖 Blender 自动保存的上次内存值
+            presets = properties.load_presets()
+            idx = props.active_preset_index
+            if 0 <= idx < len(props.presets_collection):
+                name = props.presets_collection[idx].name
+                if name in presets:
+                    addon = bpy.context.preferences.addons.get(__package__)
+                    if addon and addon.preferences:
+                        properties.apply_preset_data(addon.preferences, presets[name])
+
+            # 强制 UI 刷新
+            for window in bpy.context.window_manager.windows:
+                for area in window.screen.areas:
+                    area.tag_redraw()
         except Exception as e:
             print(f"[AssetsCheck] 延迟预设同步失败: {e}")
         return None
-    bpy.app.handlers.load_post.append(_delayed_sync_presets)
-    _register_handlers.append(("load_post", _delayed_sync_presets))
+    bpy.app.handlers.load_post.append(_delayed_init)
+    _register_handlers.append(("load_post", _delayed_init))
 
 
 def unregister():

@@ -199,6 +199,54 @@ class ASSETSCHECKNEXT_OT_PresetRemoveActive(bpy.types.Operator):
         return {"FINISHED"}
 
 
+class ASSETSCHECKNEXT_OT_PresetMoveUp(bpy.types.Operator):
+    bl_idname = "assets_check_next.preset_move_up"
+    bl_label = "上移预设"
+    bl_description = "将当前选中预设向上移动"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        props = context.scene.assets_check_next_props
+        idx = props.active_preset_index
+        if idx <= 0 or idx >= len(props.presets_collection):
+            self.report({"WARNING"}, "已在顶部，无法上移")
+            return {"CANCELLED"}
+        data = load_presets()
+        keys = list(data.keys())
+        old_idx = keys.index(props.presets_collection[idx].name)
+        keys[old_idx], keys[old_idx - 1] = keys[old_idx - 1], keys[old_idx]
+        reordered = {k: data[k] for k in keys}
+        save_presets(reordered)
+        sync_preset_collection(props)
+        props.active_preset_index = idx - 1
+        self.report({"INFO"}, "已上移")
+        return {"FINISHED"}
+
+
+class ASSETSCHECKNEXT_OT_PresetMoveDown(bpy.types.Operator):
+    bl_idname = "assets_check_next.preset_move_down"
+    bl_label = "下移预设"
+    bl_description = "将当前选中预设向下移动"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        props = context.scene.assets_check_next_props
+        idx = props.active_preset_index
+        if idx < 0 or idx >= len(props.presets_collection) - 1:
+            self.report({"WARNING"}, "已在底部，无法下移")
+            return {"CANCELLED"}
+        data = load_presets()
+        keys = list(data.keys())
+        old_idx = keys.index(props.presets_collection[idx].name)
+        keys[old_idx], keys[old_idx + 1] = keys[old_idx + 1], keys[old_idx]
+        reordered = {k: data[k] for k in keys}
+        save_presets(reordered)
+        sync_preset_collection(props)
+        props.active_preset_index = idx + 1
+        self.report({"INFO"}, "已下移")
+        return {"FINISHED"}
+
+
 class ASSETSCHECKNEXT_OT_PresetImport(bpy.types.Operator, ImportHelper):
     bl_idname = "assets_check_next.preset_import"
     bl_label = "导入预设"

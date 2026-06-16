@@ -148,10 +148,12 @@ class ASSETSCHECKNEXT_OT_PresetQuickSave(bpy.types.Operator):
             return {"CANCELLED"}
         name = props.presets_collection[idx].name
         data = load_presets()
-        data[name] = collect_preset_data(cfg)
+        before = collect_preset_data(cfg)
+        data[name] = before
         save_presets(data)
         # 同步到 scene props
         apply_preset_data(props, data[name])
+        print(f"[AssetsCheck] 保存预设 '{name}'，chk_uv_bounds={before.get('chk_uv_bounds')}, chk_uv_overlap={before.get('chk_uv_overlap')}, chk_ngon={before.get('chk_ngon')}, chk_object_data_name_match={before.get('chk_object_data_name_match')}")
         self.report({"INFO"}, f"已保存到预设: {name}")
         return {"FINISHED"}
 
@@ -176,9 +178,12 @@ class ASSETSCHECKNEXT_OT_PresetResetDefault(bpy.types.Operator):
             self.report({"WARNING"}, f"预设 '{name}' 无数据")
             return {"CANCELLED"}
 
+        print(f"[AssetsCheck] 恢复预设 '{name}'，JSON 中 chk_uv_bounds={preset_cfg.get('chk_uv_bounds')}, chk_uv_overlap={preset_cfg.get('chk_uv_overlap')}, chk_ngon={preset_cfg.get('chk_ngon')}, chk_object_data_name_match={preset_cfg.get('chk_object_data_name_match')}")
+
         # 写入 addon preferences（UI 绑定源）
         if addon and addon.preferences:
             apply_preset_data(addon.preferences, preset_cfg)
+            print(f"[AssetsCheck] 写入 addon.preferences 后 chk_uv_bounds={addon.preferences.chk_uv_bounds}")
 
         # 同时写入 scene props（检查执行时的回退源）
         apply_preset_data(props, preset_cfg)

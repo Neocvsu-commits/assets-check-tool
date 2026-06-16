@@ -22,6 +22,7 @@ from .modifier import run as run_modifier
 from .animation import run as run_animation
 from .vertex_weight import run as run_vertex_weight
 from .collision import run as run_collision
+from .object_data_name_match import run as run_object_data_name_match
 
 from .common import build_bmesh
 
@@ -110,6 +111,8 @@ def run_checks_for_object(obj, context, props, *, colliders=None):
             rows.append(_call_check(run_vertex_weight, obj, context, props))
         if props.chk_collision:
             rows.append(_call_check(run_collision, obj, context, props, colliders=colliders))
+        if props.chk_object_data_name_match:
+            rows.append(_call_check(run_object_data_name_match, obj, context, props))
         return rows
     finally:
         if shared_bm is not None:

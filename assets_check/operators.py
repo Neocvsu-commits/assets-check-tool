@@ -269,6 +269,7 @@ class ASSETSCHECKNEXT_OT_HeaderTooltip(bpy.types.Operator):
             "顶点-权重": "检测：静态网格体是否错误绑定了多余的顶点组(Vertex Groups)",
             "碰撞-检查": "检测：场景中是否存在与该物体绑定的UCX/UBX等UE专属简易碰撞体，且面数是否超标(>64面)",
             "命名-规范": "检测：物体需以SM_开头，材质需以M_开头，贴图需以T_开头，且仅包含英文字母、数字和下划线",
+            "名数-匹配": "检测：物体名称是否与其网格数据块（Object Data）名称一致。在 Blender 中复制物体时网格数据名会保留原名，导致物体名和数据名不匹配",
         }
         return tt_dict.get(properties.col_name, properties.col_name)
 
@@ -1559,6 +1560,36 @@ class ASSETSCHECKNEXT_MT_QF_SelfIntersection(bpy.types.Menu):
 
     def draw(self, context):
         self.layout.operator("assets_check_next.locate_self_intersection", text="定位交叉面")
+
+
+class ASSETSCHECKNEXT_MT_QF_ObjectDataNameMatch(bpy.types.Menu):
+    bl_idname = "ASSETSCHECKNEXT_MT_QF_ObjectDataNameMatch"
+    bl_label = "名数匹配处理"
+
+    def draw(self, context):
+        self.layout.operator("assets_check_next.fix_object_data_name", text="网格数据改名→匹配物体名")
+
+
+class ASSETSCHECKNEXT_OT_FixObjectDataName(bpy.types.Operator):
+    bl_idname = "assets_check_next.fix_object_data_name"
+    bl_label = "网格数据改名→匹配物体名"
+    bl_description = "将选中物体的网格数据块名称改为与物体名一致"
+    bl_options = {"REGISTER", "UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        return context.selected_objects and context.mode == "OBJECT"
+
+    def execute(self, context):
+        fixed = 0
+        for obj in context.selected_objects:
+            if obj.type != "MESH":
+                continue
+            if obj.name != obj.data.name:
+                obj.data.name = obj.name
+                fixed += 1
+        self.report({"INFO"}, f"已将 {fixed} 个物体的网格数据名改为与物体名一致")
+        return {"FINISHED"}
 
 
 # ============================================================

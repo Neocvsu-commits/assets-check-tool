@@ -33,6 +33,7 @@ DEFAULT_CHK_PRESET_KEYS = (
     "chk_vertex_weight",
     "chk_collision",
     "chk_ue_vertex_color_naming",
+    "chk_object_data_name_match",
 )
 
 
@@ -53,6 +54,7 @@ BUILTIN_PRESETS = {
         "chk_apply_scale": True, "chk_transform_zero": True, "chk_pivot_position": True,
         "chk_modifier": True, "chk_animation": True, "chk_vertex_weight": True,
         "chk_collision": True, "chk_ue_vertex_color_naming": True,
+        "chk_object_data_name_match": True,
     },
     "资产模型": {
         "chk_ngon": True, "chk_empty_material_slot": True, "chk_transform": True,
@@ -64,6 +66,7 @@ BUILTIN_PRESETS = {
         "chk_apply_scale": True, "chk_transform_zero": True, "chk_pivot_position": True,
         "chk_modifier": True, "chk_animation": True, "chk_vertex_weight": True,
         "chk_collision": True, "chk_ue_vertex_color_naming": True,
+        "chk_object_data_name_match": True,
     },
 }
 
@@ -223,6 +226,7 @@ class ASSETSCHECKNEXT_AddonPreferences(bpy.types.AddonPreferences):
     chk_vertex_weight: bpy.props.BoolProperty(name="顶点重量/组检查", default=True)
     chk_collision: bpy.props.BoolProperty(name="UE简易碰撞检查", default=True)
     chk_ue_vertex_color_naming: bpy.props.BoolProperty(name="命名不合规", default=True)
+    chk_object_data_name_match: bpy.props.BoolProperty(name="物体名与网格数据名不匹配", default=True)
 
     def draw(self, context):
         self.layout.label(text="资产审查助手：配置在 3D 视图顶栏「检查」中编辑")
@@ -270,6 +274,7 @@ class ASSETSCHECKNEXT_Props(bpy.types.PropertyGroup):
     chk_animation: bpy.props.BoolProperty(name="包含动画数据", default=True)
     chk_vertex_weight: bpy.props.BoolProperty(name="顶点重量组检查", default=True)
     chk_collision: bpy.props.BoolProperty(name="UE简易碰撞检查", default=True)
+    chk_object_data_name_match: bpy.props.BoolProperty(name="物体名与网格数据名不匹配", default=True)
 
     total_items: bpy.props.IntProperty(name="Total", default=0)
     checked_object_count: bpy.props.IntProperty(name="Checked Objects", default=0)

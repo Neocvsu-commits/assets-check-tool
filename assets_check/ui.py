@@ -28,6 +28,7 @@ CHECK_LABELS = {
     "animation": "动画检查",
     "vertex_weight": "顶点权重",
     "collision": "碰撞检查",
+    "object_data_name_match": "物体名与数据名不匹配",
 }
 
 CHECK_LABELS_MATRIX = {
@@ -55,6 +56,7 @@ CHECK_LABELS_MATRIX = {
     "animation": "动画",
     "vertex_weight": "权重",
     "collision": "碰撞",
+    "object_data_name_match": "名数",
 }
 
 CHECK_LABELS_MATRIX_2LINE = {
@@ -82,6 +84,7 @@ CHECK_LABELS_MATRIX_2LINE = {
     "animation": ("动画", "检查"),
     "vertex_weight": ("顶点", "权重"),
     "collision": ("碰撞", "检查"),
+    "object_data_name_match": ("名数", "匹配"),
 }
 
 
@@ -113,6 +116,7 @@ def _enabled_check_ids(cfg):
         ("chk_vertex_weight", "vertex_weight"),
         ("chk_collision", "collision"),
         ("chk_ue_vertex_color_naming", "ue_vertex_color_naming"),
+        ("chk_object_data_name_match", "object_data_name_match"),
     ]
     for prop_name, check_id in mapping:
         if getattr(cfg, prop_name, False):
@@ -335,6 +339,7 @@ def draw_assets_check_next_content(layout, context):
         obj_flow.prop(cfg, "chk_animation")
         obj_flow.prop(cfg, "chk_vertex_weight")
         obj_flow.prop(cfg, "chk_collision")
+        obj_flow.prop(cfg, "chk_object_data_name_match")
 
         naming_box = checks_box.box()
         naming_box.label(text="命名规范 (Naming)", icon="SYNTAX_OFF")
@@ -402,6 +407,7 @@ def draw_assets_check_next_content(layout, context):
             "vertex_weight": "ASSETSCHECKNEXT_MT_QF_VertexWeight",
             "collision": "ASSETSCHECKNEXT_MT_QF_Collision",
             "ue_vertex_color_naming": "ASSETSCHECKNEXT_MT_QF_NamingPrefix",
+            "object_data_name_match": "ASSETSCHECKNEXT_MT_QF_ObjectDataNameMatch",
         }
 
         # 第一横条：左侧名称/面数表头 + 右侧每列（菜单+两行文字纵向叠放）

@@ -130,14 +130,23 @@ def collect_preset_data(props):
 
 
 def apply_preset_data(props, data):
+    changed = []
     for key, value in data.items():
         if not key.startswith("chk_") or key in PRESET_EXCLUDED_KEYS:
             continue
         if hasattr(props, key):
             try:
-                setattr(props, key, bool(value))
+                old = getattr(props, key)
+                new = bool(value)
+                if old != new:
+                    setattr(props, key, new)
+                    changed.append(f"{key}={old}->{new}")
             except Exception:
                 pass
+    if changed:
+        print(f"[AssetsCheck] apply_preset_data 写入: {', '.join(changed)}")
+    else:
+        print(f"[AssetsCheck] apply_preset_data: 无变更（所有值已匹配）")
 
 
 def sync_preset_collection(props):

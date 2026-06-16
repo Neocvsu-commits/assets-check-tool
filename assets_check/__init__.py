@@ -1,7 +1,7 @@
 bl_info = {
     "name": "资产审查助手",
     "author": "Neo",
-    "version": (3, 0, 1),
+    "version": (3, 0, 2),
     "blender": (4, 2, 0),
     "location": "3D 视图 > 顶栏「检查」",
     "description": "资产网格与数据检查、快速修复与报告导出（正式版）",

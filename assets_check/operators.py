@@ -150,6 +150,8 @@ class ASSETSCHECKNEXT_OT_PresetQuickSave(bpy.types.Operator):
         data = load_presets()
         data[name] = collect_preset_data(cfg)
         save_presets(data)
+        # 同步到 scene props
+        apply_preset_data(props, data[name])
         self.report({"INFO"}, f"已保存到预设: {name}")
         return {"FINISHED"}
 
@@ -173,8 +175,19 @@ class ASSETSCHECKNEXT_OT_PresetResetDefault(bpy.types.Operator):
         if not preset_cfg:
             self.report({"WARNING"}, f"预设 '{name}' 无数据")
             return {"CANCELLED"}
+
+        # 写入 addon preferences（UI 绑定源）
         if addon and addon.preferences:
             apply_preset_data(addon.preferences, preset_cfg)
+
+        # 同时写入 scene props（检查执行时的回退源）
+        apply_preset_data(props, preset_cfg)
+
+        # 强制刷新 UI
+        for window in context.window_manager.windows:
+            for area in window.screen.areas:
+                area.tag_redraw()
+
         self.report({"INFO"}, f"已恢复预设: {name}")
         return {"FINISHED"}
 

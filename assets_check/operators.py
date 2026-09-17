@@ -10,6 +10,8 @@ import bpy
 from bpy_extras.io_utils import ExportHelper, ImportHelper
 
 from .services import run_checks_and_store
+from .presets import BUILTIN_PRESETS, validate_presets, personal_presets
+from .reports import write_twin_report, write_model_report
 from .properties import (
     apply_preset_data,
     collect_preset_data,
@@ -18,6 +20,15 @@ from .properties import (
     save_presets,
     sync_preset_collection,
 )
+
+
+def _save_presets_or_report(operator, data):
+    try:
+        save_presets(data)
+        return True
+    except (OSError, ValueError) as exc:
+        operator.report({"ERROR"}, f"预设保存失败：{exc}")
+        return False
 
 
 class ASSETSCHECKNEXT_OT_RunChecks(bpy.types.Operator):
@@ -105,7 +116,7 @@ class ASSETSCHECKNEXT_OT_OpenQuickFixMenu(bpy.types.Operator):
 class ASSETSCHECKNEXT_OT_PresetSave(bpy.types.Operator):
     bl_idname = "assets_check_next.preset_save"
     bl_label = "保存预设"
-    bl_options = {"REGISTER", "UNDO"}
+    bl_options = {"REGISTER"}
 
     preset_name: bpy.props.StringProperty(name="预设名称", default="我的预设")
 
@@ -120,9 +131,13 @@ class ASSETSCHECKNEXT_OT_PresetSave(bpy.types.Operator):
         addon = context.preferences.addons.get(__package__)
         cfg = addon.preferences if addon else props
         name = self.preset_name.strip() or "未命名预设"
+        if name in BUILTIN_PRESETS:
+            self.report({"WARNING"}, "内置预设固定保留，请为个人预设使用新名称")
+            return {"CANCELLED"}
         data = load_presets()
         data[name] = collect_preset_data(cfg)
-        save_presets(data)
+        if not _save_presets_or_report(self, data):
+            return {"CANCELLED"}
         sync_preset_collection(props)
         for i, item in enumerate(props.presets_collection):
             if item.name == name:
@@ -135,8 +150,17 @@ class ASSETSCHECKNEXT_OT_PresetSave(bpy.types.Operator):
 class ASSETSCHECKNEXT_OT_PresetQuickSave(bpy.types.Operator):
     bl_idname = "assets_check_next.preset_quick_save"
     bl_label = "保存"
-    bl_description = "将当前勾选状态覆盖写入当前选中的预设"
-    bl_options = {"REGISTER", "UNDO"}
+    bl_description = "保存个人预设；内置预设修改后另存为个人预设"
+    bl_options = {"REGISTER"}
+
+    def invoke(self, context, event):
+        props = context.scene.assets_check_next_props
+        index = props.active_preset_index
+        if 0 <= index < len(props.presets_collection):
+            name = props.presets_collection[index].name
+            if name in BUILTIN_PRESETS:
+                return bpy.ops.assets_check_next.preset_save("INVOKE_DEFAULT", preset_name=name + "（自定义）")
+        return self.execute(context)
 
     def execute(self, context):
         props = context.scene.assets_check_next_props
@@ -148,9 +172,13 @@ class ASSETSCHECKNEXT_OT_PresetQuickSave(bpy.types.Operator):
             return {"CANCELLED"}
         name = props.presets_collection[idx].name
         data = load_presets()
+        if name in BUILTIN_PRESETS:
+            self.report({"WARNING"}, "内置预设不可覆盖，请点击 + 另存为个人预设")
+            return {"CANCELLED"}
         before = collect_preset_data(cfg)
         data[name] = before
-        save_presets(data)
+        if not _save_presets_or_report(self, data):
+            return {"CANCELLED"}
         # 同步到 scene props
         apply_preset_data(props, data[name])
         print(f"[AssetsCheck] 保存预设 '{name}'，chk_uv_bounds={before.get('chk_uv_bounds')}, chk_uv_overlap={before.get('chk_uv_overlap')}, chk_ngon={before.get('chk_ngon')}, chk_object_data_name_match={before.get('chk_object_data_name_match')}")
@@ -162,7 +190,7 @@ class ASSETSCHECKNEXT_OT_PresetResetDefault(bpy.types.Operator):
     bl_idname = "assets_check_next.preset_reset_default"
     bl_label = "恢复"
     bl_description = "将勾选状态恢复为当前选中预设的已保存状态"
-    bl_options = {"REGISTER", "UNDO"}
+    bl_options = {"REGISTER"}
 
     def execute(self, context):
         props = context.scene.assets_check_next_props
@@ -200,7 +228,7 @@ class ASSETSCHECKNEXT_OT_PresetResetDefault(bpy.types.Operator):
 class ASSETSCHECKNEXT_OT_PresetRemoveActive(bpy.types.Operator):
     bl_idname = "assets_check_next.preset_remove_active"
     bl_label = "删除当前预设"
-    bl_options = {"REGISTER", "UNDO"}
+    bl_options = {"REGISTER"}
 
     def execute(self, context):
         props = context.scene.assets_check_next_props
@@ -211,11 +239,15 @@ class ASSETSCHECKNEXT_OT_PresetRemoveActive(bpy.types.Operator):
 
         name = props.presets_collection[idx].name
         data = load_presets()
+        if name in BUILTIN_PRESETS:
+            self.report({"WARNING"}, "内置预设随插件提供，不能删除")
+            return {"CANCELLED"}
         if name in data:
             del data[name]
         if not data:
             data = {"默认预设": default_preset_all_enabled()}
-        save_presets(data)
+        if not _save_presets_or_report(self, data):
+            return {"CANCELLED"}
         sync_preset_collection(props)
         props.active_preset_index = min(idx, max(0, len(props.presets_collection) - 1))
         self.report({"INFO"}, f"已删除预设: {name}")
@@ -226,7 +258,7 @@ class ASSETSCHECKNEXT_OT_PresetMoveUp(bpy.types.Operator):
     bl_idname = "assets_check_next.preset_move_up"
     bl_label = "上移预设"
     bl_description = "将当前选中预设向上移动"
-    bl_options = {"REGISTER", "UNDO"}
+    bl_options = {"REGISTER"}
 
     def execute(self, context):
         props = context.scene.assets_check_next_props
@@ -237,9 +269,13 @@ class ASSETSCHECKNEXT_OT_PresetMoveUp(bpy.types.Operator):
         data = load_presets()
         keys = list(data.keys())
         old_idx = keys.index(props.presets_collection[idx].name)
+        if keys[old_idx] in BUILTIN_PRESETS or keys[old_idx - 1] in BUILTIN_PRESETS:
+            self.report({"INFO"}, "内置预设固定显示在前面")
+            return {"CANCELLED"}
         keys[old_idx], keys[old_idx - 1] = keys[old_idx - 1], keys[old_idx]
         reordered = {k: data[k] for k in keys}
-        save_presets(reordered)
+        if not _save_presets_or_report(self, reordered):
+            return {"CANCELLED"}
         sync_preset_collection(props)
         props.active_preset_index = idx - 1
         self.report({"INFO"}, "已上移")
@@ -250,7 +286,7 @@ class ASSETSCHECKNEXT_OT_PresetMoveDown(bpy.types.Operator):
     bl_idname = "assets_check_next.preset_move_down"
     bl_label = "下移预设"
     bl_description = "将当前选中预设向下移动"
-    bl_options = {"REGISTER", "UNDO"}
+    bl_options = {"REGISTER"}
 
     def execute(self, context):
         props = context.scene.assets_check_next_props
@@ -261,9 +297,13 @@ class ASSETSCHECKNEXT_OT_PresetMoveDown(bpy.types.Operator):
         data = load_presets()
         keys = list(data.keys())
         old_idx = keys.index(props.presets_collection[idx].name)
+        if keys[old_idx] in BUILTIN_PRESETS:
+            self.report({"INFO"}, "内置预设固定显示在前面")
+            return {"CANCELLED"}
         keys[old_idx], keys[old_idx + 1] = keys[old_idx + 1], keys[old_idx]
         reordered = {k: data[k] for k in keys}
-        save_presets(reordered)
+        if not _save_presets_or_report(self, reordered):
+            return {"CANCELLED"}
         sync_preset_collection(props)
         props.active_preset_index = idx + 1
         self.report({"INFO"}, "已下移")
@@ -273,7 +313,7 @@ class ASSETSCHECKNEXT_OT_PresetMoveDown(bpy.types.Operator):
 class ASSETSCHECKNEXT_OT_PresetImport(bpy.types.Operator, ImportHelper):
     bl_idname = "assets_check_next.preset_import"
     bl_label = "导入预设"
-    bl_options = {"REGISTER", "UNDO"}
+    bl_options = {"REGISTER"}
 
     filename_ext = ".json"
     filter_glob: bpy.props.StringProperty(default="*.json", options={"HIDDEN"})
@@ -282,7 +322,7 @@ class ASSETSCHECKNEXT_OT_PresetImport(bpy.types.Operator, ImportHelper):
         props = context.scene.assets_check_next_props
         try:
             with open(self.filepath, "r", encoding="utf-8") as f:
-                imported = json.load(f)
+                imported = personal_presets(validate_presets(json.load(f)))
             if not isinstance(imported, dict):
                 self.report({"WARNING"}, "预设文件格式不正确")
                 return {"CANCELLED"}
@@ -292,7 +332,8 @@ class ASSETSCHECKNEXT_OT_PresetImport(bpy.types.Operator, ImportHelper):
 
         data = load_presets()
         data.update(imported)
-        save_presets(data)
+        if not _save_presets_or_report(self, data):
+            return {"CANCELLED"}
         sync_preset_collection(props)
         self.report({"INFO"}, "导入预设成功")
         return {"FINISHED"}
@@ -301,7 +342,7 @@ class ASSETSCHECKNEXT_OT_PresetImport(bpy.types.Operator, ImportHelper):
 class ASSETSCHECKNEXT_OT_PresetExport(bpy.types.Operator, ExportHelper):
     bl_idname = "assets_check_next.preset_export"
     bl_label = "导出预设"
-    bl_options = {"REGISTER", "UNDO"}
+    bl_options = {"REGISTER"}
 
     filename_ext = ".json"
     filter_glob: bpy.props.StringProperty(default="*.json", options={"HIDDEN"})
@@ -329,7 +370,7 @@ class ASSETSCHECKNEXT_OT_PresetExport(bpy.types.Operator, ExportHelper):
 class ASSETSCHECKNEXT_OT_PresetExportDialog(bpy.types.Operator):
     bl_idname = "assets_check_next.preset_export_dialog"
     bl_label = "选择要导出的预设"
-    bl_options = {"REGISTER", "UNDO"}
+    bl_options = {"REGISTER"}
 
     def invoke(self, context, event):
         props = context.scene.assets_check_next_props
@@ -382,7 +423,7 @@ class ASSETSCHECKNEXT_OT_HeaderTooltip(bpy.types.Operator):
             "动画-检查": "检测：物体是否携带有动画时间轴的关键帧数据",
             "顶点-权重": "检测：静态网格体是否错误绑定了多余的顶点组(Vertex Groups)",
             "碰撞-检查": "检测：场景中是否存在与该物体绑定的UCX/UBX等UE专属简易碰撞体，且面数是否超标(>64面)",
-            "命名-规范": "检测：物体需以SM_开头，材质需以M_开头，贴图需以T_开头，且仅包含英文字母、数字和下划线",
+            "命名-规范": "检测：按所选命名规范检查；项目材质 MI_，资产导出物体 SM_、材质 M_，贴图 T_",
             "名数-匹配": "检测：物体名称是否与其网格数据块（Object Data）名称一致。在 Blender 中复制物体时网格数据名会保留原名，导致物体名和数据名不匹配",
         }
         return tt_dict.get(properties.col_name, properties.col_name)
@@ -452,12 +493,21 @@ class ASSETSCHECKNEXT_OT_QuickFixAction(bpy.types.Operator):
                         bpy.ops.mesh.remove_doubles(threshold=0.0001)
                         bpy.ops.object.mode_set(mode="OBJECT")
                     elif self.action == "AUTOFILL_NAMING_PREFIX":
-                        if not obj.name.startswith("SM_"):
+                        addon = context.preferences.addons.get(__package__)
+                        cfg = addon.preferences if addon else context.scene.assets_check_next_props
+                        project = cfg.naming_standard == "PROJECT"
+                        if not project and not obj.name.startswith("SM_"):
                             obj.name = f"SM_{obj.name}"
+                        prefix = "MI_" if project else "M_"
                         for slot in obj.material_slots:
                             mat = slot.material
-                            if mat and not mat.name.startswith("M_"):
-                                mat.name = f"M_{mat.name}"
+                            if mat and not mat.name.startswith(prefix):
+                                core = mat.name
+                                for old_prefix in ("MI_", "M_"):
+                                    if core.startswith(old_prefix):
+                                        core = core[len(old_prefix):]
+                                        break
+                                mat.name = prefix + core
                             if not mat or not mat.use_nodes or not mat.node_tree:
                                 continue
                             for node in mat.node_tree.nodes:
@@ -704,59 +754,76 @@ class ASSETSCHECKNEXT_OT_SelectResultObject(bpy.types.Operator):
 
 class ASSETSCHECKNEXT_OT_ExportReport(bpy.types.Operator, ExportHelper):
     bl_idname = "assets_check_next.export_report"
-    bl_label = "导出报告 (CSV、JSON)"
+    bl_label = "Twin 用模型报告"
+    bl_description = "完整检查明细，每个模型的每项检查一行；同时导出 CSV 和 JSON"
     filename_ext = ".csv"
     filter_glob: bpy.props.StringProperty(default="*.csv", options={"HIDDEN"})
 
+    def invoke(self, context, event):
+        if not self.filepath:
+            self.filepath = "Twin用模型报告.csv"
+        return ExportHelper.invoke(self, context, event)
+
     def execute(self, context):
-        props = context.scene.assets_check_next_props
-        if not props.results_json:
-            self.report({"WARNING"}, "没有可导出的检查结果，请先执行检查")
+        try:
+            data = json.loads(context.scene.assets_check_next_props.results_json or "{}")
+            write_twin_report(self.filepath, data)
+        except (OSError, ValueError, TypeError) as exc:
+            self.report({"ERROR"}, f"导出失败：{exc}")
             return {"CANCELLED"}
+        self.report({"INFO"}, f"Twin 用模型报告已导出（CSV、JSON）：{self.filepath}")
+        return {"FINISHED"}
 
-        data = json.loads(props.results_json)
-        rows = data.get("rows", [])
-        if not rows:
-            self.report({"WARNING"}, "结果为空")
+
+class ASSETSCHECKNEXT_OT_ExportModelReport(bpy.types.Operator, ExportHelper):
+    bl_idname = "assets_check_next.export_model_report"
+    bl_label = "模型报告（地编）"
+    bl_description = "按 SOP 模型组提交对接表导出 CSV 和 JSON，每个已检查网格一行"
+    filename_ext = ".csv"
+    filter_glob: bpy.props.StringProperty(default="*.csv", options={"HIDDEN"})
+    project_name: bpy.props.StringProperty(name="项目名称")
+    project_quality: bpy.props.StringProperty(name="项目质量及制作周期")
+    project_owner: bpy.props.StringProperty(name="项目负责人")
+    texture_type: bpy.props.EnumProperty(
+        name="默认贴图类型", default="UNKNOWN",
+        items=[("UNKNOWN", "待填写", "按实际用途填写，不自动推断"),
+               ("四方/二方连续", "四方/二方连续", "平铺贴图"),
+               ("PBR烘焙贴图", "PBR烘焙贴图", "独占PBR图集"),
+               ("色卡", "色卡", "风格化色卡"),
+               ("无独立贴图/复用UE材质", "无独立贴图/复用UE材质", "复用已有材质")],
+    )
+    expected_completion: bpy.props.StringProperty(name="预计完成时间")
+    actual_submission: bpy.props.StringProperty(name="实际提交时间")
+    submission_method: bpy.props.StringProperty(name="提交方式 / SVN 路径")
+    remarks: bpy.props.StringProperty(name="补充说明")
+
+    def invoke(self, context, event):
+        if not self.filepath:
+            self.filepath = "模型报告.csv"
+        return ExportHelper.invoke(self, context, event)
+
+    def draw(self, context):
+        layout = self.layout
+        layout.label(text="使用最近一次检查的网格信息")
+        layout.label(text="面数为三角面数；每个网格单独一行")
+        for key in ("project_name", "project_quality", "project_owner", "texture_type",
+                    "expected_completion", "actual_submission", "submission_method", "remarks"):
+            layout.prop(self, key)
+
+    def execute(self, context):
+        defaults = {key: getattr(self, key) for key in (
+            "project_name", "project_quality", "project_owner", "texture_type",
+            "expected_completion", "actual_submission", "submission_method", "remarks",
+        )}
+        if defaults["texture_type"] == "UNKNOWN":
+            defaults["texture_type"] = ""
+        try:
+            data = json.loads(context.scene.assets_check_next_props.results_json or "{}")
+            write_model_report(self.filepath, data, defaults)
+        except (OSError, ValueError, TypeError, KeyError) as exc:
+            self.report({"ERROR"}, f"导出失败：{exc}")
             return {"CANCELLED"}
-
-        # 与 CSV 列顺序、字段一一对应（含 display_value，与界面矩阵「数值」列一致）
-        export_columns = ["Object", "Check", "Status", "Message", "DisplayValue"]
-        norm_rows = [
-            {
-                "object_name": r.get("object_name", ""),
-                "check_id": r.get("check_id", ""),
-                "status": r.get("status", ""),
-                "message": r.get("message", ""),
-                "display_value": r.get("display_value", ""),
-            }
-            for r in rows
-        ]
-
-        with open(self.filepath, "w", encoding="utf-8-sig", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow(export_columns)
-            for r in norm_rows:
-                writer.writerow(
-                    [
-                        r["object_name"],
-                        r["check_id"],
-                        r["status"],
-                        r["message"],
-                        r["display_value"],
-                    ]
-                )
-
-        json_path = os.path.splitext(self.filepath)[0] + ".json"
-        with open(json_path, "w", encoding="utf-8") as jf:
-            json.dump(
-                {"export_columns": export_columns, "rows": norm_rows},
-                jf,
-                ensure_ascii=False,
-                indent=2,
-            )
-
-        self.report({"INFO"}, f"导出完成：{self.filepath} / {json_path}")
+        self.report({"INFO"}, f"模型报告已导出（CSV、JSON）：{self.filepath}")
         return {"FINISHED"}
 
 

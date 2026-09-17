@@ -27,7 +27,6 @@ CHECK_LABELS = {
     "modifier": "修改器",
     "animation": "动画检查",
     "vertex_weight": "顶点权重",
-    "collision": "碰撞检查",
     "object_data_name_match": "物体名与数据名不匹配",
 }
 
@@ -55,7 +54,6 @@ CHECK_LABELS_MATRIX = {
     "modifier": "修改",
     "animation": "动画",
     "vertex_weight": "权重",
-    "collision": "碰撞",
     "object_data_name_match": "名数",
 }
 
@@ -83,7 +81,6 @@ CHECK_LABELS_MATRIX_2LINE = {
     "modifier": ("修改", "器"),
     "animation": ("动画", "检查"),
     "vertex_weight": ("顶点", "权重"),
-    "collision": ("碰撞", "检查"),
     "object_data_name_match": ("名数", "匹配"),
 }
 
@@ -114,7 +111,6 @@ def _enabled_check_ids(cfg):
         ("chk_modifier", "modifier"),
         ("chk_animation", "animation"),
         ("chk_vertex_weight", "vertex_weight"),
-        ("chk_collision", "collision"),
         ("chk_ue_vertex_color_naming", "ue_vertex_color_naming"),
         ("chk_object_data_name_match", "object_data_name_match"),
     ]
@@ -260,9 +256,6 @@ def _draw_update_banner(layout):
 
 def draw_assets_check_next_content(layout, context):
     """绘制完整的资产检查面板内容，供弹窗/Panel 共用。"""
-    # ---- 更新 Banner ----
-    _draw_update_banner(layout)
-
     scene = context.scene
     props = scene.assets_check_next_props
     ui_state = scene.ac_ui_state
@@ -270,40 +263,35 @@ def draw_assets_check_next_content(layout, context):
     cfg = addon.preferences if addon else props
     results = scene.assets_check_next_results
 
+    box_presets = layout.box()
+    row_preset = box_presets.row(align=True)
+    row_preset.scale_y = 1.2
+    row_preset.template_list(
+        "ASSETSCHECKNEXT_UL_PresetList",
+        "",
+        props,
+        "presets_collection",
+        props,
+        "active_preset_index",
+        rows=3,
+    )
+    col_preset_ops = row_preset.column(align=True)
+    col_preset_ops.operator("assets_check_next.preset_save", text="", icon="ADD")
+    col_preset_ops.operator("assets_check_next.preset_move_up", text="", icon="TRIA_UP")
+    col_preset_ops.operator("assets_check_next.preset_move_down", text="", icon="TRIA_DOWN")
+    col_preset_ops.operator("assets_check_next.preset_remove_active", text="", icon="X")
+    row_io = box_presets.row(align=True)
+    row_io.operator("assets_check_next.preset_quick_save", text="保存", icon="FILE_TICK")
+    row_io.operator("assets_check_next.preset_reset_default", text="恢复", icon="LOOP_BACK")
+    row_io.operator("assets_check_next.preset_import", text="导入", icon="IMPORT")
+    row_io.operator("assets_check_next.preset_export_dialog", text="导出", icon="EXPORT")
+
+
     checks_box = layout.box()
     header_row = checks_box.row(align=True)
     header_row.prop(ui_state, "show_config", text="", icon="TRIA_DOWN" if ui_state.show_config else "TRIA_RIGHT", emboss=False)
     header_row.label(text="自定义检查")
     if ui_state.show_config:
-        if len(props.presets_collection) == 0:
-            try:
-                props_store.sync_preset_collection(props)
-            except Exception as e:
-                print(f"[AssetsCheck] 同步预设失败: {e}")
-
-        box_presets = checks_box.box()
-        row_preset = box_presets.row(align=True)
-        row_preset.scale_y = 1.2
-        row_preset.template_list(
-            "ASSETSCHECKNEXT_UL_PresetList",
-            "",
-            props,
-            "presets_collection",
-            props,
-            "active_preset_index",
-            rows=3,
-        )
-        col_preset_ops = row_preset.column(align=True)
-        col_preset_ops.operator("assets_check_next.preset_save", text="", icon="ADD")
-        col_preset_ops.operator("assets_check_next.preset_move_up", text="", icon="TRIA_UP")
-        col_preset_ops.operator("assets_check_next.preset_move_down", text="", icon="TRIA_DOWN")
-        col_preset_ops.operator("assets_check_next.preset_remove_active", text="", icon="X")
-        row_io = box_presets.row(align=True)
-        row_io.operator("assets_check_next.preset_quick_save", text="保存", icon="FILE_TICK")
-        row_io.operator("assets_check_next.preset_reset_default", text="恢复", icon="LOOP_BACK")
-        row_io.operator("assets_check_next.preset_import", text="导入预设", icon="IMPORT")
-        row_io.operator("assets_check_next.preset_export_dialog", text="导出预设", icon="EXPORT")
-
         mat_box = checks_box.box()
         mat_box.label(text="材质与贴图 (Materials)", icon="MATERIAL")
         mat_flow = mat_box.column_flow(columns=2, align=True)
@@ -342,11 +330,11 @@ def draw_assets_check_next_content(layout, context):
         obj_flow.prop(cfg, "chk_modifier")
         obj_flow.prop(cfg, "chk_animation")
         obj_flow.prop(cfg, "chk_vertex_weight")
-        obj_flow.prop(cfg, "chk_collision")
         obj_flow.prop(cfg, "chk_object_data_name_match")
 
         naming_box = checks_box.box()
         naming_box.label(text="命名规范 (Naming)", icon="SYNTAX_OFF")
+        naming_box.prop(cfg, "naming_standard", text="")
         naming_box.prop(cfg, "chk_ue_vertex_color_naming")
 
     btn_col = layout.column(align=False)
@@ -355,7 +343,8 @@ def draw_assets_check_next_content(layout, context):
     btn_row.operator("assets_check_next.run_checks", text="开始检查", icon_value=get_icon_id("timer-outline.png"))
     btn_row.operator("assets_check_next.auto_fix_basic", text="一键修复", icon="TOOL_SETTINGS")
     export_row = btn_col.row(align=True)
-    export_row.operator("assets_check_next.export_report", text="导出报告 (CSV、JSON)", icon="EXPORT")
+    export_row.operator("assets_check_next.export_report", text="Twin 用模型报告", icon="EXPORT")
+    export_row.operator("assets_check_next.export_model_report", text="模型报告（地编）", icon="EXPORT")
 
     layout.separator(factor=1.0)
     info_split = layout.split(factor=0.30, align=True)
@@ -409,7 +398,6 @@ def draw_assets_check_next_content(layout, context):
             "pivot_position": "ASSETSCHECKNEXT_MT_QF_PivotPosition",
             "modifier": "ASSETSCHECKNEXT_MT_QF_Modifier",
             "vertex_weight": "ASSETSCHECKNEXT_MT_QF_VertexWeight",
-            "collision": "ASSETSCHECKNEXT_MT_QF_Collision",
             "ue_vertex_color_naming": "ASSETSCHECKNEXT_MT_QF_NamingPrefix",
             "object_data_name_match": "ASSETSCHECKNEXT_MT_QF_ObjectDataNameMatch",
         }
@@ -518,7 +506,27 @@ def draw_assets_check_next_content(layout, context):
                     spacer.scale_y = 1e-9
                     spacer.label(text="")
 
-    # ---- 反馈 & 支持 ----
+
+
+class ASSETSCHECK_PT_main_panel(bpy.types.Panel):
+    bl_label = "资产审查助手"
+    bl_idname = "ASSETSCHECK_PT_main_panel"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "Assets_Check"
+
+    def draw(self, context):
+        draw_assets_check_next_content(self.layout, context)
+
+
+class ASSETSCHECKNEXT_UL_PresetList(bpy.types.UIList):
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        row = layout.row(align=True)
+        row.label(text=item.name, icon="LOCKED" if item.name in props_store.BUILTIN_PRESETS else "PRESET")
+
+
+def draw_support_preferences(layout, context):
+    _draw_update_banner(layout)
     layout.separator()
     feedback_box = layout.box()
     feedback_box.label(text="反馈 & 支持", icon="HELP")
@@ -540,19 +548,10 @@ def draw_assets_check_next_content(layout, context):
         icon="URL",
     ).url = "https://github.com/Neocvsu-commits"
 
-
-class ASSETSCHECK_PT_main_panel(bpy.types.Panel):
-    bl_label = "资产审查助手"
-    bl_idname = "ASSETSCHECK_PT_main_panel"
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
-    bl_category = "Assets_Check"
-
-    def draw(self, context):
-        draw_assets_check_next_content(self.layout, context)
-
-
-class ASSETSCHECKNEXT_UL_PresetList(bpy.types.UIList):
-    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-        row = layout.row(align=True)
-        row.label(text=item.name, icon="PRESET")
+    box = layout.box()
+    box.label(text="个人预设迁移", icon="PRESET")
+    box.label(text="默认预设随插件安装；个人预设保存在 Blender 用户配置目录。")
+    box.label(text="换电脑时先导出个人预设，在新电脑导入。")
+    row = box.row(align=True)
+    row.operator("assets_check_next.preset_import", text="导入预设", icon="IMPORT")
+    row.operator("assets_check_next.preset_export_dialog", text="导出预设", icon="EXPORT")

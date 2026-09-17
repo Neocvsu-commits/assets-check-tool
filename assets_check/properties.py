@@ -3,187 +3,20 @@ import json
 import os
 
 
-PRESET_EXCLUDED_KEYS = set()
-
-# 与 AddonPreferences / ASSETSCHECKNEXT_Props 中 chk_* 保持一致；预设「默认预设」为全部开启
-DEFAULT_CHK_PRESET_KEYS = (
-    "chk_ngon",
-    "chk_empty_material_slot",
-    "chk_transform",
-    "chk_missing_textures",
-    "chk_uv_bounds",
-    "chk_uv_overlap",
-    "chk_uv_layer_count",
-    "chk_vertex_color_count",
-    "chk_ignore_uv0",
-    "chk_non_manifold",
-    "chk_ignore_manifold_open",
-    "chk_loose_geometry",
-    "chk_doubled_vertices",
-    "chk_poles",
-    "chk_normal_direction",
-    "chk_nonplanar_faces",
-    "chk_self_intersection",
-    "chk_zero_edges",
-    "chk_apply_scale",
-    "chk_transform_zero",
-    "chk_pivot_position",
-    "chk_modifier",
-    "chk_animation",
-    "chk_vertex_weight",
-    "chk_collision",
-    "chk_ue_vertex_color_naming",
-    "chk_object_data_name_match",
+from .presets import (
+    BUILTIN_PRESETS, apply_preset_data, collect_preset_data,
+    default_preset_all_enabled, load_presets, save_presets, sync_preset_collection,
+    update_active_preset_index, sync_preferences_to_scene_props,
 )
 
 
-def default_preset_all_enabled():
-    return {k: True for k in DEFAULT_CHK_PRESET_KEYS}
-
-
-# 内置三套预设，load_presets() 返回的 dict 中少于 3 个时自动补齐
-BUILTIN_PRESETS = {
-    "默认预设": {k: True for k in DEFAULT_CHK_PRESET_KEYS},
-    "项目模型": {
-        "chk_ngon": True, "chk_empty_material_slot": True, "chk_transform": True,
-        "chk_missing_textures": True, "chk_uv_bounds": False, "chk_uv_overlap": False,
-        "chk_uv_layer_count": True, "chk_vertex_color_count": True, "chk_ignore_uv0": True,
-        "chk_non_manifold": True, "chk_ignore_manifold_open": True, "chk_loose_geometry": True,
-        "chk_doubled_vertices": True, "chk_poles": True, "chk_normal_direction": True,
-        "chk_nonplanar_faces": True, "chk_self_intersection": True, "chk_zero_edges": True,
-        "chk_apply_scale": True, "chk_transform_zero": True, "chk_pivot_position": True,
-        "chk_modifier": True, "chk_animation": True, "chk_vertex_weight": True,
-        "chk_collision": True, "chk_ue_vertex_color_naming": True,
-        "chk_object_data_name_match": True,
-    },
-    "资产模型": {
-        "chk_ngon": True, "chk_empty_material_slot": True, "chk_transform": True,
-        "chk_missing_textures": True, "chk_uv_bounds": True, "chk_uv_overlap": True,
-        "chk_uv_layer_count": True, "chk_vertex_color_count": True, "chk_ignore_uv0": False,
-        "chk_non_manifold": True, "chk_ignore_manifold_open": True, "chk_loose_geometry": True,
-        "chk_doubled_vertices": True, "chk_poles": True, "chk_normal_direction": True,
-        "chk_nonplanar_faces": True, "chk_self_intersection": True, "chk_zero_edges": True,
-        "chk_apply_scale": True, "chk_transform_zero": True, "chk_pivot_position": True,
-        "chk_modifier": True, "chk_animation": True, "chk_vertex_weight": True,
-        "chk_collision": True, "chk_ue_vertex_color_naming": True,
-        "chk_object_data_name_match": True,
-    },
-}
-
-
-def _ensure_builtin_presets(data):
-    """如果 data 缺少内置预设则自动补充。"""
-    changed = False
-    for name, cfg in BUILTIN_PRESETS.items():
-        if name not in data:
-            data[name] = dict(cfg)
-            changed = True
-    return changed
-
-
-def _preset_file_path():
-    return os.path.join(os.path.dirname(__file__), "assets_check_presets.json")
-
-
-def load_presets():
-    file_path = _preset_file_path()
-    data = {}
-    if os.path.exists(file_path):
-        try:
-            with open(file_path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-        except Exception as e:
-            print(f"[AssetsCheck] 加载预设失败: {e}")
-    if not isinstance(data, dict) or not data:
-        data = {"默认预设": default_preset_all_enabled()}
-
-    if _ensure_builtin_presets(data):
-        save_presets(data)
-
-    if data.get("默认预设") == {}:
-        data["默认预设"] = default_preset_all_enabled()
-    return data
-
-
-def save_presets(data):
-    try:
-        with open(_preset_file_path(), "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
-    except Exception as e:
-        print(f"[AssetsCheck] 保存预设失败: {e}")
-
-
-def collect_preset_data(props):
-    out = {}
-    for key in dir(props):
-        if not key.startswith("chk_"):
-            continue
-        if key in PRESET_EXCLUDED_KEYS:
-            continue
-        try:
-            value = getattr(props, key)
-        except Exception:
-            continue
-        if isinstance(value, bool):
-            out[key] = value
-    return out
-
-
-def apply_preset_data(props, data):
-    changed = []
-    for key, value in data.items():
-        if not key.startswith("chk_") or key in PRESET_EXCLUDED_KEYS:
-            continue
-        if hasattr(props, key):
-            try:
-                old = getattr(props, key)
-                new = bool(value)
-                if old != new:
-                    setattr(props, key, new)
-                    changed.append(f"{key}={old}->{new}")
-            except Exception:
-                pass
-    if changed:
-        print(f"[AssetsCheck] apply_preset_data 写入: {', '.join(changed)}")
-    else:
-        print(f"[AssetsCheck] apply_preset_data: 无变更（所有值已匹配）")
-
-
-def sync_preset_collection(props):
-    presets = load_presets()
-    props.presets_collection.clear()
-    for name in presets.keys():
-        item = props.presets_collection.add()
-        item.name = str(name)
-
-
-def update_active_preset_index(self, context):
-    try:
-        presets = load_presets()
-        idx = self.active_preset_index
-        if 0 <= idx < len(self.presets_collection):
-            name = self.presets_collection[idx].name
-            if name in presets:
-                addon = context.preferences.addons.get(__package__)
-                if addon and addon.preferences:
-                    apply_preset_data(addon.preferences, presets[name])
-    except Exception:
-        pass
-
-
-def sync_preferences_to_scene_props(context, scene_props):
-    addon = context.preferences.addons.get(__package__)
-    if not addon or not addon.preferences:
-        return
-    prefs = addon.preferences
-    for key in dir(scene_props):
-        if not key.startswith("chk_"):
-            continue
-        if hasattr(prefs, key):
-            try:
-                setattr(scene_props, key, getattr(prefs, key))
-            except Exception:
-                pass
+def naming_standard_property():
+    return bpy.props.EnumProperty(
+        name="命名规范",
+        items=[("PROJECT", "项目资产（MI_）", "材质 MI_，允许无 SM_ 前缀的独立部件"),
+               ("ASSET", "资产导出（M_）", "物体 SM_，材质 M_，贴图 T_")],
+        default="PROJECT",
+    )
 
 
 class ASSETSCHECKNEXT_ResultItem(bpy.types.PropertyGroup):
@@ -200,7 +33,7 @@ class ASSETSCHECKNEXT_PresetItem(bpy.types.PropertyGroup):
 
 
 class AssetsCheckUIState(bpy.types.PropertyGroup):
-    show_config: bpy.props.BoolProperty(name="显示配置区", default=True)
+    show_config: bpy.props.BoolProperty(name="显示配置区", default=False)
     search_query: bpy.props.StringProperty(name="搜索", default="")
     sort_col: bpy.props.IntProperty(name="排序列", default=0, min=0)
     sort_reverse: bpy.props.BoolProperty(name="降序", default=False)
@@ -208,6 +41,8 @@ class AssetsCheckUIState(bpy.types.PropertyGroup):
 
 class ASSETSCHECKNEXT_AddonPreferences(bpy.types.AddonPreferences):
     bl_idname = __package__
+
+    naming_standard: naming_standard_property()
 
     chk_ngon: bpy.props.BoolProperty(name="N多边面", default=True)
     chk_empty_material_slot: bpy.props.BoolProperty(name="空材质槽", default=True)
@@ -233,12 +68,13 @@ class ASSETSCHECKNEXT_AddonPreferences(bpy.types.AddonPreferences):
     chk_modifier: bpy.props.BoolProperty(name="包含修改器", default=True)
     chk_animation: bpy.props.BoolProperty(name="包含动画数据", default=True)
     chk_vertex_weight: bpy.props.BoolProperty(name="顶点重量/组检查", default=True)
-    chk_collision: bpy.props.BoolProperty(name="UE简易碰撞检查", default=True)
     chk_ue_vertex_color_naming: bpy.props.BoolProperty(name="命名不合规", default=True)
     chk_object_data_name_match: bpy.props.BoolProperty(name="物体名与网格数据名不匹配", default=True)
 
     def draw(self, context):
-        self.layout.label(text="资产审查助手：配置在 3D 视图顶栏「检查」中编辑")
+        from .ui import draw_support_preferences
+        self.layout.label(text="检查与报告位于 3D 视图顶栏「检查」")
+        draw_support_preferences(self.layout, context)
 
 
 class ASSETSCHECKNEXT_Props(bpy.types.PropertyGroup):
@@ -254,6 +90,8 @@ class ASSETSCHECKNEXT_Props(bpy.types.PropertyGroup):
     )
 
     # 检查项开关（先提供核心高频项）
+    naming_standard: naming_standard_property()
+
     chk_ngon: bpy.props.BoolProperty(name="N多边面", default=True)
     chk_empty_material_slot: bpy.props.BoolProperty(name="空材质槽", default=True)
     chk_transform: bpy.props.BoolProperty(name="变换检查", default=True)
@@ -282,7 +120,6 @@ class ASSETSCHECKNEXT_Props(bpy.types.PropertyGroup):
     chk_modifier: bpy.props.BoolProperty(name="包含修改器", default=True)
     chk_animation: bpy.props.BoolProperty(name="包含动画数据", default=True)
     chk_vertex_weight: bpy.props.BoolProperty(name="顶点重量组检查", default=True)
-    chk_collision: bpy.props.BoolProperty(name="UE简易碰撞检查", default=True)
     chk_object_data_name_match: bpy.props.BoolProperty(name="物体名与网格数据名不匹配", default=True)
 
     total_items: bpy.props.IntProperty(name="Total", default=0)

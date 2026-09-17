@@ -1,7 +1,7 @@
 bl_info = {
     "name": "资产审查助手",
     "author": "Neo",
-    "version": (3, 0, 2),
+    "version": (3, 1, 0),
     "blender": (4, 2, 0),
     "location": "3D 视图 > 顶栏「检查」",
     "description": "资产网格与数据检查、快速修复与报告导出（正式版）",
@@ -17,6 +17,10 @@ if "bpy" in locals():
         importlib.reload(icon_manager)
     if "update_checker" in locals():
         importlib.reload(update_checker)
+    if "presets" in locals():
+        importlib.reload(presets)
+    if "reports" in locals():
+        importlib.reload(reports)
     if "properties" in locals():
         importlib.reload(properties)
     if "checks" in locals():
@@ -30,6 +34,8 @@ if "bpy" in locals():
 
 from . import icon_manager
 from . import update_checker
+from . import presets
+from . import reports
 from . import properties
 from . import checks
 from . import services
@@ -77,8 +83,6 @@ CLASSES = (
     operators.ASSETSCHECKNEXT_OT_OriginToWorld,
     operators.ASSETSCHECKNEXT_OT_ApplyAllModifiers,
     operators.ASSETSCHECKNEXT_OT_ClearVertexGroups,
-    operators.ASSETSCHECKNEXT_OT_SelectCollision,
-    operators.ASSETSCHECKNEXT_OT_GenerateConvexCollision,
     operators.ASSETSCHECKNEXT_MT_QF_EmptyMaterial,
     operators.ASSETSCHECKNEXT_MT_QF_MissingTextures,
     operators.ASSETSCHECKNEXT_MT_QF_UVBounds,
@@ -95,7 +99,6 @@ CLASSES = (
     operators.ASSETSCHECKNEXT_MT_QF_PivotPosition,
     operators.ASSETSCHECKNEXT_MT_QF_Modifier,
     operators.ASSETSCHECKNEXT_MT_QF_VertexWeight,
-    operators.ASSETSCHECKNEXT_MT_QF_Collision,
     operators.ASSETSCHECKNEXT_MT_QF_VertexColor,
     operators.ASSETSCHECKNEXT_OT_LocateNonplanar,
     operators.ASSETSCHECKNEXT_OT_LocateZeroEdges,
@@ -111,6 +114,7 @@ CLASSES = (
     operators.ASSETSCHECKNEXT_OT_AutoFixBasic,
     operators.ASSETSCHECKNEXT_OT_SelectResultObject,
     operators.ASSETSCHECKNEXT_OT_ExportReport,
+    operators.ASSETSCHECKNEXT_OT_ExportModelReport,
     operators.ASSETSCHECKNEXT_OT_OpenPopup,
     operators.ASSETSCHECKNEXT_OT_SelectAllMeshes,
     operators.ASSETSCHECKNEXT_OT_SelectByResult,
@@ -150,17 +154,19 @@ def register():
         pass
 
     # 预设同步：不能在 register() 里直接操作 scene，用 load_post 延迟
-    def _delayed_init(_dummy):
+    @bpy.app.handlers.persistent
+    def _delayed_init(_dummy=None):
         try:
             props = bpy.context.scene.assets_check_next_props
             properties.sync_preset_collection(props)
 
-            # 从预设 JSON 加载当前选中预设到 addon preferences，覆盖 Blender 自动保存的上次内存值
+            # 安装后和打开工程时同步默认/个人预设。
             presets = properties.load_presets()
             idx = props.active_preset_index
             if 0 <= idx < len(props.presets_collection):
                 name = props.presets_collection[idx].name
                 if name in presets:
+                    properties.apply_preset_data(props, presets[name])
                     addon = bpy.context.preferences.addons.get(__package__)
                     if addon and addon.preferences:
                         properties.apply_preset_data(addon.preferences, presets[name])
@@ -174,12 +180,18 @@ def register():
         return None
     bpy.app.handlers.load_post.append(_delayed_init)
     _register_handlers.append(("load_post", _delayed_init))
+    bpy.app.timers.register(_delayed_init, first_interval=0.1)
+    _register_handlers.append(("timer", _delayed_init))
 
 
 def unregister():
     global _icons, _register_handlers
     # 清理 load_post handler
     for handler_type, handler in _register_handlers:
+        if handler_type == "timer":
+            if bpy.app.timers.is_registered(handler):
+                bpy.app.timers.unregister(handler)
+            continue
         handler_list = getattr(bpy.app.handlers, handler_type, None)
         if handler_list is not None and handler in handler_list:
             handler_list.remove(handler)

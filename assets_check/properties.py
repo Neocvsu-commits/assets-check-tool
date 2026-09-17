@@ -14,7 +14,7 @@ def naming_standard_property():
     return bpy.props.EnumProperty(
         name="命名规范",
         items=[("PROJECT", "项目资产（MI_）", "材质 MI_，允许无 SM_ 前缀的独立部件"),
-               ("ASSET", "资产导出（M_）", "物体 SM_，材质 M_，贴图 T_")],
+               ("ASSET", "资产导出（SM_ / MI_）", "物体 SM_，材质 MI_，贴图 T_；符合部门 SOP")],
         default="PROJECT",
     )
 

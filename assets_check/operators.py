@@ -423,7 +423,7 @@ class ASSETSCHECKNEXT_OT_HeaderTooltip(bpy.types.Operator):
             "动画-检查": "检测：物体是否携带有动画时间轴的关键帧数据",
             "顶点-权重": "检测：静态网格体是否错误绑定了多余的顶点组(Vertex Groups)",
             "碰撞-检查": "检测：场景中是否存在与该物体绑定的UCX/UBX等UE专属简易碰撞体，且面数是否超标(>64面)",
-            "命名-规范": "检测：按所选命名规范检查；项目材质 MI_，资产导出物体 SM_、材质 M_，贴图 T_",
+            "命名-规范": "SOP：所有材质统一 MI_材质名，禁止 M_；资产导出物体 SM_，项目独立部件允许无前缀；贴图 T_",
             "名数-匹配": "检测：物体名称是否与其网格数据块（Object Data）名称一致。在 Blender 中复制物体时网格数据名会保留原名，导致物体名和数据名不匹配",
         }
         return tt_dict.get(properties.col_name, properties.col_name)
@@ -498,7 +498,7 @@ class ASSETSCHECKNEXT_OT_QuickFixAction(bpy.types.Operator):
                         project = cfg.naming_standard == "PROJECT"
                         if not project and not obj.name.startswith("SM_"):
                             obj.name = f"SM_{obj.name}"
-                        prefix = "MI_" if project else "M_"
+                        prefix = "MI_"
                         for slot in obj.material_slots:
                             mat = slot.material
                             if mat and not mat.name.startswith(prefix):
@@ -778,23 +778,13 @@ class ASSETSCHECKNEXT_OT_ExportReport(bpy.types.Operator, ExportHelper):
 class ASSETSCHECKNEXT_OT_ExportModelReport(bpy.types.Operator, ExportHelper):
     bl_idname = "assets_check_next.export_model_report"
     bl_label = "模型报告（地编）"
-    bl_description = "按 SOP 模型组提交对接表导出 CSV 和 JSON，每个已检查网格一行"
+    bl_description = "按 SOP 第2.1节七项验收自查表导出 CSV 和 JSON，每个网格一张表"
     filename_ext = ".csv"
     filter_glob: bpy.props.StringProperty(default="*.csv", options={"HIDDEN"})
     project_name: bpy.props.StringProperty(name="项目名称")
-    project_quality: bpy.props.StringProperty(name="项目质量及制作周期")
-    project_owner: bpy.props.StringProperty(name="项目负责人")
-    texture_type: bpy.props.EnumProperty(
-        name="默认贴图类型", default="UNKNOWN",
-        items=[("UNKNOWN", "待填写", "按实际用途填写，不自动推断"),
-               ("四方/二方连续", "四方/二方连续", "平铺贴图"),
-               ("PBR烘焙贴图", "PBR烘焙贴图", "独占PBR图集"),
-               ("色卡", "色卡", "风格化色卡"),
-               ("无独立贴图/复用UE材质", "无独立贴图/复用UE材质", "复用已有材质")],
+    delivery_filename: bpy.props.StringProperty(
+        name="交付FBX文件名", description="用于第3项文件命名检查；留空时该项待人工确认，不以物体名代替文件名",
     )
-    expected_completion: bpy.props.StringProperty(name="预计完成时间")
-    actual_submission: bpy.props.StringProperty(name="实际提交时间")
-    submission_method: bpy.props.StringProperty(name="提交方式 / SVN 路径")
     remarks: bpy.props.StringProperty(name="补充说明")
 
     def invoke(self, context, event):
@@ -805,18 +795,14 @@ class ASSETSCHECKNEXT_OT_ExportModelReport(bpy.types.Operator, ExportHelper):
     def draw(self, context):
         layout = self.layout
         layout.label(text="使用最近一次检查的网格信息")
-        layout.label(text="面数为三角面数；每个网格单独一行")
-        for key in ("project_name", "project_quality", "project_owner", "texture_type",
-                    "expected_completion", "actual_submission", "submission_method", "remarks"):
+        layout.label(text="每个网格一张7项验收表；空白结果待人工确认")
+        for key in ("project_name", "delivery_filename", "remarks"):
             layout.prop(self, key)
 
     def execute(self, context):
         defaults = {key: getattr(self, key) for key in (
-            "project_name", "project_quality", "project_owner", "texture_type",
-            "expected_completion", "actual_submission", "submission_method", "remarks",
+            "project_name", "delivery_filename", "remarks",
         )}
-        if defaults["texture_type"] == "UNKNOWN":
-            defaults["texture_type"] = ""
         try:
             data = json.loads(context.scene.assets_check_next_props.results_json or "{}")
             write_model_report(self.filepath, data, defaults)

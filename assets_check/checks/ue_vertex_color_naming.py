@@ -11,7 +11,8 @@ def run(obj, context, props):
     for mat_slot in obj.material_slots:
         mat = mat_slot.material
         if mat:
-            prefix = "MI_" if project else "M_"
+            # SOP 1.4 / 1.6: all delivery materials use MI_, regardless of preset.
+            prefix = "MI_"
             if not (pattern.fullmatch(mat.name) and mat.name.startswith(prefix) and len(mat.name) > len(prefix)):
                 return {"check_id": "ue_vertex_color_naming", "status": "FAIL", "message": f"材质命名不合规，应为 {prefix}<材质名>"}
             if mat.use_nodes and mat.node_tree:

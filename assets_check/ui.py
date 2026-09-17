@@ -218,44 +218,38 @@ def _display_object_name(raw_name: str) -> str:
 
 
 def _draw_update_banner(layout):
-    """面板顶部：版本状态 + 刷新按钮。"""
-    try:
-        from .update_checker import get_update_info, get_check_status
-    except ImportError:
-        return
+    """Always show the installed version and the update entry in the working UI."""
+    from . import bl_info
+    from .update_checker import get_update_info, get_check_status
 
     row = layout.row(align=True)
+    row.alignment = "LEFT"
+    row.label(text="v" + ".".join(map(str, bl_info["version"])), icon="INFO")
+    row.operator("assets_check_next.check_update", text="检查更新", icon="FILE_REFRESH")
     status = get_check_status("Neocvsu-commits", "assets-check-tool")
-    st = status.get("status", "pending")
-
-    if st == "checking":
-        row.label(text="正在检查更新...", icon="SORTTIME")
-    elif st == "error":
-        row.label(text=f"更新检查失败: {status.get('error', '未知错误')}", icon="CANCEL")
-    elif st == "no_release":
-        row.label(text="暂无可获取的 Release", icon="INFO")
-    elif st == "no_update" and status.get("current_version"):
-        row.label(text=f"已是最新版本 v{status['current_version']}", icon="CHECKMARK")
-    elif st == "pending":
-        row.label(text="等待更新检查...", icon="TIME")
-
-    row.operator("assets_check_next.check_update", text="", icon="FILE_REFRESH")
+    state = status.get("status", "pending")
+    if state == "checking":
+        row.label(text="检查中…", icon="SORTTIME")
+    elif state == "no_update":
+        row.label(text="已是最新版", icon="CHECKMARK")
+    elif state == "error":
+        layout.label(text="更新检查失败，请重试", icon="ERROR")
+    elif state == "no_release":
+        row.label(text="暂无发布版本", icon="INFO")
 
     info = get_update_info("Neocvsu-commits", "assets-check-tool")
-    if not info:
-        return
-    box = layout.box()
-    box.alert = True
-    col = box.column(align=True)
-    col.label(text=f" 当前版本: v{info['current_version']}", icon="INFO")
-    col.label(text=f" 最新版本: v{info['latest_version']}", icon="URL")
-    row = col.row(align=True)
-    row.operator("wm.url_open", text="查看 Release", icon="URL").url = info["html_url"]
-    row.operator("assets_check_next.install_update", text="一键更新", icon="IMPORT")
+    if info:
+        update_row = layout.row(align=True)
+        update_row.alert = True
+        update_row.label(text=f"可更新至 v{info['latest_version']}", icon="IMPORT")
+        update_row.operator("assets_check_next.install_update", text="一键更新", icon="IMPORT")
+        update_row.operator("wm.url_open", text="更新说明", icon="URL").url = info["html_url"]
+
 
 
 def draw_assets_check_next_content(layout, context):
     """绘制完整的资产检查面板内容，供弹窗/Panel 共用。"""
+    _draw_update_banner(layout)
     scene = context.scene
     props = scene.assets_check_next_props
     ui_state = scene.ac_ui_state
@@ -402,41 +396,35 @@ def draw_assets_check_next_content(layout, context):
             "object_data_name_match": "ASSETSCHECKNEXT_MT_QF_ObjectDataNameMatch",
         }
 
-        # 第一横条：左侧名称/面数表头 + 右侧每列（菜单+两行文字纵向叠放）
-        header_split = table_col.split(factor=left_factor, align=True)
-
-        header_left = header_split.split(factor=name_factor, align=True)
-        name_hdr_col = header_left.column(align=True)
-        name_hdr_box = name_hdr_col.box()
-        name_hdr_box.scale_y = 1.6
-        op = name_hdr_box.operator("assets_check_next.header_tooltip", text="名称", emboss=False)
-        op.col_name = "名称"
-        face_hdr_col = header_left.column(align=True)
-        face_hdr_box = face_hdr_col.box()
-        face_hdr_box.scale_y = 1.6
-        op = face_hdr_box.operator("assets_check_next.header_tooltip", text="面数", emboss=False)
-        op.col_name = "面数"
-
-        header_right = header_split.row(align=True)
+        # Every column uses the same menu row and the same two title rows.
+        menu_split = table_col.split(factor=left_factor, align=True)
+        menu_left = menu_split.split(factor=name_factor, align=True)
+        menu_left.label(text=" ")
+        menu_left.label(text=" ")
+        menu_right = menu_split.row(align=True)
         for cid in check_ids:
-            col = header_right.column(align=True)
             menu_id = menu_map.get(cid)
             if menu_id:
-                col.menu(menu_id, text="", icon_value=0)
+                menu_right.menu(menu_id, text="", icon_value=0)
             else:
-                col.label(text=" ", icon_value=0)
-            hbox = col.box()
-            short = CHECK_LABELS_MATRIX_2LINE.get(cid)
-            if short:
-                key = f"{short[0]}-{short[1]}"
-                text_col = hbox.column(align=True)
-                text_col.scale_y = 0.8
-                op1 = text_col.operator("assets_check_next.header_tooltip", text=short[0], emboss=False)
-                op1.col_name = key
-                op2 = text_col.operator("assets_check_next.header_tooltip", text=short[1], emboss=False)
-                op2.col_name = key
-            else:
-                hbox.label(text=CHECK_LABELS_MATRIX.get(cid, cid))
+                menu_right.label(text=" ")
+
+        header_split = table_col.split(factor=left_factor, align=True)
+        header_left = header_split.split(factor=name_factor, align=True)
+
+        def title_cell(parent, first, second, tooltip):
+            cell = parent.box().column(align=True)
+            cell.scale_y = 0.8
+            for label in (first, second):
+                op = cell.operator("assets_check_next.header_tooltip", text=label or " ", emboss=False)
+                op.col_name = tooltip
+
+        title_cell(header_left, "名称", "", "名称")
+        title_cell(header_left, "面数", "", "面数")
+        header_right = header_split.row(align=True)
+        for cid in check_ids:
+            first, second = CHECK_LABELS_MATRIX_2LINE.get(cid, (CHECK_LABELS_MATRIX.get(cid, cid), ""))
+            title_cell(header_right, first, second, f"{first}-{second}")
 
         # 第二横条：排序箭头
         sort_split = table_col.split(factor=left_factor, align=True)

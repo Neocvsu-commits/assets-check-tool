@@ -25,7 +25,7 @@ def run_checks_and_store(scene, context):
     for obj in mesh_objects:
         obj.update_from_editmode()
         checks = run_checks_for_object(obj, context, props)
-        models.append(model_snapshot(obj))
+        models.append(model_snapshot(obj, scene))
         for row in checks:
             item = results.add()
             item.object_name = obj.name

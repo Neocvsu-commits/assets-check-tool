@@ -338,10 +338,11 @@ def draw_assets_check_next_content(layout, context):
 
     btn_col = layout.column(align=False)
     btn_col.scale_y = 1.2
-    btn_col.operator("assets_check_next.run_checks", text="开始检查", icon_value=get_icon_id("timer-outline.png"))
-    btn_col.operator("assets_check_next.auto_fix_basic", text="一键修复", icon="TOOL_SETTINGS")
-    btn_col.operator("assets_check_next.export_report", text="资产库模型报告", icon="EXPORT")
-    btn_col.operator("assets_check_next.export_model_report", text="模型报告（地编）", icon="EXPORT")
+    btn_row = btn_col.row(align=True)
+    btn_row.operator("assets_check_next.run_checks", text="开始检查", icon_value=get_icon_id("timer-outline.png"))
+    btn_row.operator("assets_check_next.auto_fix_basic", text="一键修复", icon="TOOL_SETTINGS")
+    btn_row.operator("assets_check_next.export_report", text="资产库模型报告", icon="EXPORT")
+    btn_row.operator("assets_check_next.export_model_report", text="模型报告（地编）", icon="EXPORT")
 
     layout.separator(factor=1.0)
     info_split = layout.split(factor=0.30, align=True)
@@ -483,12 +484,11 @@ def draw_assets_check_next_content(layout, context):
                 if display_value != "":
                     row = cell.row(align=True)
                     if cid == "uv_name":
-                        op = row.operator(
+                        # 按钮文本即完整层名：列内截断时，悬浮提示自动显示完整文本
+                        row.operator(
                             "assets_check_next.cell_tooltip",
                             text=display_value, emboss=False, translate=False,
                         )
-                        # 尾部零宽空格：避免 tooltip 文本命中界面翻译词条（如 UVMap -> UV贴图）
-                        op.tooltip = str(cell_data.get("message", "")) + "​"
                     else:
                         row.label(text=display_value, translate=False)
                     if cid in {"uv_layer_count", "vertex_color_count"}:

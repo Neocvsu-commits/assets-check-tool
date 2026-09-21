@@ -433,17 +433,11 @@ class ASSETSCHECKNEXT_OT_HeaderTooltip(bpy.types.Operator):
         return {"FINISHED"}
 
 
+# 文本单元格：不设描述文本，悬浮提示只显示按钮上的完整名称（列内截断时可见全文）
 class ASSETSCHECKNEXT_OT_CellTooltip(bpy.types.Operator):
-    """带悬浮提示的文本单元格；tooltip 文本由绘制方动态传入"""
     bl_idname = "assets_check_next.cell_tooltip"
     bl_label = ""
     bl_description = ""
-
-    tooltip: bpy.props.StringProperty()
-
-    @classmethod
-    def description(cls, context, properties):
-        return properties.tooltip or ""
 
     def execute(self, context):
         return {"FINISHED"}

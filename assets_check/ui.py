@@ -170,6 +170,7 @@ def _build_result_matrix(results):
         matrix[item.object_name][item.check_id] = {
             "status": item.status,
             "display_value": item.display_value,
+            "message": item.message,
         }
     return matrix
 
@@ -483,7 +484,14 @@ def draw_assets_check_next_content(layout, context):
 
                 if display_value != "":
                     row = cell.row(align=True)
-                    row.label(text=display_value, translate=False)
+                    if cid == "uv_name":
+                        op = row.operator(
+                            "assets_check_next.cell_tooltip",
+                            text=display_value, emboss=False, translate=False,
+                        )
+                        op.tooltip = str(cell_data.get("message", ""))
+                    else:
+                        row.label(text=display_value, translate=False)
                     if cid in {"uv_layer_count", "vertex_color_count"}:
                         try:
                             if int(display_value) > 1:

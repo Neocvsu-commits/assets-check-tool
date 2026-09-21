@@ -433,6 +433,22 @@ class ASSETSCHECKNEXT_OT_HeaderTooltip(bpy.types.Operator):
         return {"FINISHED"}
 
 
+class ASSETSCHECKNEXT_OT_CellTooltip(bpy.types.Operator):
+    """带悬浮提示的文本单元格；tooltip 文本由绘制方动态传入"""
+    bl_idname = "assets_check_next.cell_tooltip"
+    bl_label = ""
+    bl_description = ""
+
+    tooltip: bpy.props.StringProperty()
+
+    @classmethod
+    def description(cls, context, properties):
+        return properties.tooltip or ""
+
+    def execute(self, context):
+        return {"FINISHED"}
+
+
 class ASSETSCHECKNEXT_OT_QuickFixStub(bpy.types.Operator):
     bl_idname = "assets_check_next.quick_fix_stub"
     bl_label = "功能待迁移"

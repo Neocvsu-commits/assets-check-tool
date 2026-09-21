@@ -1,7 +1,7 @@
 bl_info = {
     "name": "资产审查",
     "author": "Neo",
-    "version": (3, 3, 4),
+    "version": (3, 3, 5),
     "blender": (4, 2, 0),
     "location": "3D 视图 > 顶栏「检查」",
     "description": "资产网格与数据检查、快速修复与报告导出（正式版）",
@@ -59,6 +59,7 @@ CLASSES = (
     operators.ASSETSCHECKNEXT_OT_PresetExportDialog,
     operators.ASSETSCHECKNEXT_OT_PresetExport,
     operators.ASSETSCHECKNEXT_OT_HeaderTooltip,
+    operators.ASSETSCHECKNEXT_OT_CellTooltip,
     operators.ASSETSCHECKNEXT_OT_QuickFixStub,
     operators.ASSETSCHECKNEXT_OT_QuickFixAction,
     operators.ASSETSCHECKNEXT_OT_MergeDuplicateMaterials,

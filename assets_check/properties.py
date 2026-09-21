@@ -51,7 +51,7 @@ class ASSETSCHECKNEXT_AddonPreferences(bpy.types.AddonPreferences):
     chk_uv_bounds: bpy.props.BoolProperty(name="UV越界检查", default=True)
     chk_uv_overlap: bpy.props.BoolProperty(name="UV重叠", default=True)
     chk_uv_name: bpy.props.BoolProperty(name="UV名称", default=True)
-    chk_uv_layer_count: bpy.props.BoolProperty(name="UV数量信息", default=True)
+    chk_uv_layer_count: bpy.props.BoolProperty(name="UV数量", default=True)
     chk_vertex_color_count: bpy.props.BoolProperty(name="顶点色", default=True)
     chk_ignore_uv0: bpy.props.BoolProperty(name="豁免UV0(允许重叠/越界)", default=True)
     chk_non_manifold: bpy.props.BoolProperty(name="非流体边", default=True)
@@ -112,7 +112,7 @@ class ASSETSCHECKNEXT_Props(bpy.types.PropertyGroup):
     chk_zero_edges: bpy.props.BoolProperty(name="零边检查", default=True)
 
     chk_uv_name: bpy.props.BoolProperty(name="UV名称", default=True)
-    chk_uv_layer_count: bpy.props.BoolProperty(name="UV数量信息", default=True)
+    chk_uv_layer_count: bpy.props.BoolProperty(name="UV数量", default=True)
     chk_vertex_color_count: bpy.props.BoolProperty(name="顶点色", default=True)
     chk_ue_vertex_color_naming: bpy.props.BoolProperty(name="命名不合规", default=True)
 

@@ -66,7 +66,7 @@ CHECK_LABELS_MATRIX_2LINE = {
     "missing_textures": ("贴图", "丢失"),
     "uv_bounds": ("UV", "越界"),
     "uv_overlap": ("UV", "重叠"),
-    "uv_name": ("UV", "名称"),
+    "uv_name": ("UV", "名"),
     "uv_layer_count": ("UV", "数"),
     "vertex_color_count": ("顶点", "色数"),
     "non_manifold": ("非流", "形边"),
@@ -483,7 +483,7 @@ def draw_assets_check_next_content(layout, context):
 
                 if display_value != "":
                     row = cell.row(align=True)
-                    row.label(text=display_value)
+                    row.label(text=display_value, translate=False)
                     if cid in {"uv_layer_count", "vertex_color_count"}:
                         try:
                             if int(display_value) > 1:

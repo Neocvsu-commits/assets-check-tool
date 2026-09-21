@@ -405,7 +405,7 @@ class ASSETSCHECKNEXT_OT_HeaderTooltip(bpy.types.Operator):
             "贴图-丢失": "检测：材质节点中引用的贴图文件是否在本地丢失",
             "UV-越界": "检测：UV是否超出了标准(0,1)区间（此项不适用于UDIM流程）",
             "UV-重叠": "检测：UV岛屿之间是否存在相互重叠",
-            "UV-名称": "UV名称：显示物体的UV层名称；下拉菜单可把第一UV层快速重命名为 UVMap 或 UV0",
+            "UV-名称": "UV名称：显示物体的UV层名称",
             "UV-数量": "UV数量：显示当前模型包含的UV通道数量（此项按黄色信息提示展示）",
             "顶点-色数": "检测：模型是否包含顶点颜色层(Color Attributes)",
             "N多-边面": "检测：是否存在由5条或更多边组成的多边形面",
@@ -433,11 +433,11 @@ class ASSETSCHECKNEXT_OT_HeaderTooltip(bpy.types.Operator):
         return {"FINISHED"}
 
 
-# 文本单元格：不设描述文本，悬浮提示只显示按钮上的完整名称（列内截断时可见全文）
+# 文本单元格：悬浮第一行为按钮上的完整名称，第二行为固定说明（避免出现"无文档记载的操作项"占位）
 class ASSETSCHECKNEXT_OT_CellTooltip(bpy.types.Operator):
     bl_idname = "assets_check_next.cell_tooltip"
     bl_label = ""
-    bl_description = ""
+    bl_description = "UV贴图名称"
 
     def execute(self, context):
         return {"FINISHED"}

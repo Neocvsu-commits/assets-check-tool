@@ -174,6 +174,46 @@ def _build_result_matrix(results):
     return matrix
 
 
+def _visual_width(text):
+    """粗略估算文本视觉宽度：全角字符按 1，半角按 0.55."""
+    return sum(1.0 if ord(ch) > 0x2E80 else 0.55 for ch in text)
+
+
+def _check_column_weights(matrix_rows, check_ids):
+    """按表头文字与UV名称实际内容估算各检查列的相对宽度."""
+    uv_w = 3.6  # 保底容纳 "UVMap"
+    for _, _, checks in matrix_rows:
+        cell = checks.get("uv_name") or {}
+        value = str(cell.get("display_value", "") or "")
+        for part in value.split(", "):
+            uv_w = max(uv_w, _visual_width(part) + 0.9)
+    uv_w = min(uv_w, 7.0)
+
+    weights = []
+    for cid in check_ids:
+        first, second = CHECK_LABELS_MATRIX_2LINE.get(cid, (CHECK_LABELS_MATRIX.get(cid, cid), ""))
+        width = max(_visual_width(first), _visual_width(second)) + 0.9
+        if cid == "uv_name":
+            width = max(width, uv_w)
+        weights.append(max(width, 2.4))
+    return weights
+
+
+def _split_cells(parent, weights):
+    """把一行按权重切分为多个 cell；嵌套 split 保证各行列边界对齐."""
+    cells = []
+    remaining = float(sum(weights)) or 1.0
+    rest = parent
+    for weight in weights[:-1]:
+        factor = max(0.01, min(0.99, weight / remaining))
+        split = rest.split(factor=factor, align=True)
+        cells.append(split.column())
+        rest = split.row()
+        remaining -= weight
+    cells.append(rest)
+    return cells
+
+
 def _iter_matrix_rows(context, ui_state, result_matrix, check_ids):
     rows = []
     name_filter = (ui_state.search_query or "").strip().lower()
@@ -376,6 +416,7 @@ def draw_assets_check_next_content(layout, context):
         left_factor = 0.24
         name_factor = 0.72
         table_col = matrix_box.column(align=True)
+        check_weights = _check_column_weights(matrix_rows, check_ids)
 
         menu_map = {
             "empty_material_slot": "ASSETSCHECKNEXT_MT_QF_EmptyMaterial",
@@ -407,13 +448,13 @@ def draw_assets_check_next_content(layout, context):
         menu_left = menu_split.split(factor=name_factor, align=True)
         menu_left.label(text=" ")
         menu_left.label(text=" ")
-        menu_right = menu_split.row(align=True)
-        for cid in check_ids:
+        menu_cells = _split_cells(menu_split.row(align=True), check_weights)
+        for cell_layout, cid in zip(menu_cells, check_ids):
             menu_id = menu_map.get(cid)
             if menu_id:
-                menu_right.menu(menu_id, text="", icon_value=0)
+                cell_layout.menu(menu_id, text="", icon_value=0)
             else:
-                menu_right.label(text=" ")
+                cell_layout.label(text=" ")
 
         header_split = table_col.split(factor=left_factor, align=True)
         header_left = header_split.split(factor=name_factor, align=True)
@@ -427,10 +468,10 @@ def draw_assets_check_next_content(layout, context):
 
         title_cell(header_left, "名称", "", "名称")
         title_cell(header_left, "面数", "", "面数")
-        header_right = header_split.row(align=True)
-        for cid in check_ids:
+        header_cells = _split_cells(header_split.row(align=True), check_weights)
+        for cell_layout, cid in zip(header_cells, check_ids):
             first, second = CHECK_LABELS_MATRIX_2LINE.get(cid, (CHECK_LABELS_MATRIX.get(cid, cid), ""))
-            title_cell(header_right, first, second, f"{first}-{second}")
+            title_cell(cell_layout, first, second, f"{first}-{second}")
 
         # 第二横条：排序箭头
         sort_split = table_col.split(factor=left_factor, align=True)
@@ -449,9 +490,9 @@ def draw_assets_check_next_content(layout, context):
             emboss=False,
         ).sort_col = 1
 
-        sort_right = sort_split.row(align=True)
-        for idx, cid in enumerate(check_ids):
-            sbox = sort_right.box()
+        sort_cells = _split_cells(sort_split.row(align=True), check_weights)
+        for idx, cell_layout in enumerate(sort_cells):
+            sbox = cell_layout.box()
             sbox.operator(
                 "assets_check_next.sort_matrix", text=" ",
                 icon_value=get_icon_id("caret-down-outline.png") if (ui_state.sort_col == idx + 2 and not ui_state.sort_reverse) else (get_icon_id("caret-up-outline.png") if ui_state.sort_col == idx + 2 else 0),
@@ -473,10 +514,10 @@ def draw_assets_check_next_content(layout, context):
             data_face_box = data_left.box()
             data_face_box.label(text=str(face_count))
 
-            data_right = data_split.row(align=True)
-            for cid in check_ids:
+            data_cells = _split_cells(data_split.row(align=True), check_weights)
+            for cell_layout, cid in zip(data_cells, check_ids):
                 cell_data = checks.get(cid, {})
-                cell = data_right.box()
+                cell = cell_layout.box()
                 display_value = ""
                 if isinstance(cell_data, dict):
                     display_value = str(cell_data.get("display_value", ""))

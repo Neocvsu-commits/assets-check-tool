@@ -423,7 +423,7 @@ class ASSETSCHECKNEXT_OT_HeaderTooltip(bpy.types.Operator):
             "动画-检查": "检测：物体是否携带有动画时间轴的关键帧数据",
             "顶点-权重": "检测：静态网格体是否错误绑定了多余的顶点组(Vertex Groups)",
             "碰撞-检查": "检测：场景中是否存在与该物体绑定的UCX/UBX等UE专属简易碰撞体，且面数是否超标(>64面)",
-            "命名-规范": "SOP：所有材质统一 MI_材质名，禁止 M_；资产导出物体 SM_，项目独立部件允许无前缀；贴图 T_",
+            "命名-规范": "SOP：所有材质统一 MI_材质名，禁止 M_；资产导出物体 SM_，项目独立部件允许无前缀；贴图 T_；任何名称不能出现 .001 之类的重复后缀",
             "名数-匹配": "检测：物体名称是否与其网格数据块（Object Data）名称一致。在 Blender 中复制物体时网格数据名会保留原名，导致物体名和数据名不匹配",
         }
         return tt_dict.get(properties.col_name, properties.col_name)

@@ -67,11 +67,21 @@ def run(obj, context, props):
         return {"check_id": "uv_overlap", "status": "PASS", "message": "无UV层，跳过"}
 
     uv_layers = obj.data.uv_layers
-    layer_index = 0
-    if props.chk_ignore_uv0 and len(uv_layers) > 1:
-        layer_index = 1
-    uv_data = uv_layers[layer_index].data
 
+    if props.chk_ignore_uv0:
+        # UV1+ 不在豁免范围，仍按正式标准判定
+        if len(uv_layers) > 1 and _has_overlap(obj, uv_layers[1].data):
+            return {"check_id": "uv_overlap", "status": "FAIL", "message": "UV1存在重叠"}
+        if _has_overlap(obj, uv_layers[0].data):
+            return {"check_id": "uv_overlap", "status": "WARN", "message": "UV0存在重叠（已豁免，仅提示）"}
+        return {"check_id": "uv_overlap", "status": "PASS", "message": "未检测到UV重叠"}
+
+    if _has_overlap(obj, uv_layers[0].data):
+        return {"check_id": "uv_overlap", "status": "FAIL", "message": "检测到UV重叠"}
+    return {"check_id": "uv_overlap", "status": "PASS", "message": "未检测到UV重叠"}
+
+
+def _has_overlap(obj, uv_data):
     # 确保有预计算的三角剖分
     obj.data.calc_loop_triangles()
     loop_tris = obj.data.loop_triangles
@@ -84,7 +94,7 @@ def run(obj, context, props):
         triangles.append((tri.polygon_index, vert_set, uvs))
 
     if len(triangles) < 2:
-        return {"check_id": "uv_overlap", "status": "PASS", "message": "未检测到UV重叠"}
+        return False
 
     # 空间哈希网格
     grid = {}
@@ -147,6 +157,6 @@ def run(obj, context, props):
                 continue
 
             if _triangles_overlap(uvs, o_uvs):
-                return {"check_id": "uv_overlap", "status": "FAIL", "message": "检测到UV重叠"}
+                return True
 
-    return {"check_id": "uv_overlap", "status": "PASS", "message": "未检测到UV重叠"}
+    return False

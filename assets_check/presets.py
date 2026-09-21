@@ -15,7 +15,7 @@ CHECK_KEYS = (
     'chk_vertex_weight', 'chk_ue_vertex_color_naming', 'chk_object_data_name_match',
 )
 PRESET_KEYS = (*CHECK_KEYS, 'naming_standard')
-ALL_CHECKS = {**dict.fromkeys(CHECK_KEYS, True), 'naming_standard': 'ASSET'}
+ALL_CHECKS = {**dict.fromkeys(CHECK_KEYS, True), 'naming_standard': 'PROJECT'}
 BUILTIN_PRESETS = {
     '项目资产要求': {
         **ALL_CHECKS, 'naming_standard': 'PROJECT',
@@ -52,10 +52,11 @@ def validate_presets(data):
                 if type(cfg[key]) is not bool:
                     raise ValueError(f'{name}: {key} 必须是布尔值')
                 values[key] = cfg[key]
-        standard = cfg.get('naming_standard', 'ASSET')
+        standard = cfg.get('naming_standard', 'PROJECT')
         if standard not in {'PROJECT', 'ASSET'}:
             raise ValueError(f'{name}: 命名规范无效')
-        values['naming_standard'] = standard
+        # 旧的 ASSET（资产导出）模式已并入项目模式
+        values['naming_standard'] = 'PROJECT'
         clean[name.strip()] = {**ALL_CHECKS, **values}
     return clean
 

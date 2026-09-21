@@ -405,8 +405,8 @@ class ASSETSCHECKNEXT_OT_HeaderTooltip(bpy.types.Operator):
             "贴图-丢失": "检测：材质节点中引用的贴图文件是否在本地丢失",
             "UV-越界": "检测：UV是否超出了标准(0,1)区间（此项不适用于UDIM流程）",
             "UV-重叠": "检测：UV岛屿之间是否存在相互重叠",
-            "UV-名": "信息：显示物体的UV层名称；下拉菜单可把第一UV层快速重命名为 UVMap 或 UV0",
-            "UV-数": "信息：显示当前模型包含的UV通道数量（此项按黄色信息提示展示）",
+            "UV-名称": "UV名称：显示物体的UV层名称；下拉菜单可把第一UV层快速重命名为 UVMap 或 UV0",
+            "UV-数量": "UV数量：显示当前模型包含的UV通道数量（此项按黄色信息提示展示）",
             "顶点-色数": "检测：模型是否包含顶点颜色层(Color Attributes)",
             "N多-边面": "检测：是否存在由5条或更多边组成的多边形面",
             "非流-形边": "检测：是否存在破洞、游离边、或超过两个面共享的非流形几何",
@@ -494,11 +494,6 @@ class ASSETSCHECKNEXT_OT_QuickFixAction(bpy.types.Operator):
                         bpy.ops.mesh.remove_doubles(threshold=0.0001)
                         bpy.ops.object.mode_set(mode="OBJECT")
                     elif self.action == "AUTOFILL_NAMING_PREFIX":
-                        addon = context.preferences.addons.get(__package__)
-                        cfg = addon.preferences if addon else context.scene.assets_check_next_props
-                        project = cfg.naming_standard == "PROJECT"
-                        if not project and not obj.name.startswith("SM_"):
-                            obj.name = f"SM_{obj.name}"
                         prefix = "MI_"
                         for slot in obj.material_slots:
                             mat = slot.material
@@ -866,7 +861,7 @@ class ASSETSCHECKNEXT_OT_ExportModelReport(bpy.types.Operator, ExportHelper):
 
 class ASSETSCHECKNEXT_OT_OpenPopup(bpy.types.Operator):
     bl_idname = "assets_check_next.open_popup"
-    bl_label = "资产审查助手"
+    bl_label = "资产审查"
     bl_description = "打开资产审查弹窗"
     bl_options = {"REGISTER", "UNDO"}
 

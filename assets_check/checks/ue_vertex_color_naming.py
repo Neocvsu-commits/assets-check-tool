@@ -15,14 +15,11 @@ def _fail(message):
 
 
 def run(obj, context, props):
-    project = getattr(props, "naming_standard", "ASSET") == "PROJECT"
-
+    # 项目模式：物体允许无前缀，但字符集与重复后缀仍受限
     if _dup_suffix(obj.name):
         return _fail(f"物体名不能出现 .001 之类的重复后缀：{obj.name}")
     if not _NAME.fullmatch(obj.name):
         return _fail("物体命名不合规（只能用字母、数字、下划线）")
-    if not project and not (obj.name.startswith("SM_") and len(obj.name) > 3):
-        return _fail(f"资产导出物体应以 SM_ 开头（项目独立部件可无前缀）：{obj.name}")
 
     for mat_slot in obj.material_slots:
         mat = mat_slot.material

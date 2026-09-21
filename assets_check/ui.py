@@ -66,8 +66,8 @@ CHECK_LABELS_MATRIX_2LINE = {
     "missing_textures": ("贴图", "丢失"),
     "uv_bounds": ("UV", "越界"),
     "uv_overlap": ("UV", "重叠"),
-    "uv_name": ("UV", "名"),
-    "uv_layer_count": ("UV", "数"),
+    "uv_name": ("UV", "名称"),
+    "uv_layer_count": ("UV", "数量"),
     "vertex_color_count": ("顶点", "色数"),
     "non_manifold": ("非流", "形边"),
     "loose_geometry": ("游离", "点边"),
@@ -503,7 +503,7 @@ def draw_assets_check_next_content(layout, context):
 
 
 class ASSETSCHECK_PT_main_panel(bpy.types.Panel):
-    bl_label = "资产审查助手"
+    bl_label = "资产审查"
     bl_idname = "ASSETSCHECK_PT_main_panel"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"

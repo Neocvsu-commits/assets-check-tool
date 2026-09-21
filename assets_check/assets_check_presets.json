@@ -57,7 +57,7 @@
     "chk_vertex_weight": true,
     "chk_ue_vertex_color_naming": true,
     "chk_object_data_name_match": true,
-    "naming_standard": "ASSET"
+    "naming_standard": "PROJECT"
   },
   "全部检查": {
     "chk_ngon": true,
@@ -87,6 +87,6 @@
     "chk_vertex_weight": true,
     "chk_ue_vertex_color_naming": true,
     "chk_object_data_name_match": true,
-    "naming_standard": "ASSET"
+    "naming_standard": "PROJECT"
   }
 }

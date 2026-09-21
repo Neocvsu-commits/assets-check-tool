@@ -13,8 +13,7 @@ from .presets import (
 def naming_standard_property():
     return bpy.props.EnumProperty(
         name="命名规范",
-        items=[("PROJECT", "项目资产（MI_）", "材质 MI_材质名，贴图 T_；项目独立部件允许无前缀；物体无 .001 等后缀字样"),
-               ("ASSET", "资产导出（SM_ / MI_）", "物体 SM_物体名（无 .001 等后缀字样），材质 MI_材质名，贴图 T_")],
+        items=[("PROJECT", "项目资产（MI_）", "材质 MI_材质名，贴图 T_；项目独立部件允许无前缀；物体无 .001 等后缀字样")],
         default="PROJECT",
     )
 

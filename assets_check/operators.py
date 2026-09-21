@@ -405,6 +405,7 @@ class ASSETSCHECKNEXT_OT_HeaderTooltip(bpy.types.Operator):
             "贴图-丢失": "检测：材质节点中引用的贴图文件是否在本地丢失",
             "UV-越界": "检测：UV是否超出了标准(0,1)区间（此项不适用于UDIM流程）",
             "UV-重叠": "检测：UV岛屿之间是否存在相互重叠",
+            "UV-名称": "信息：显示物体的UV层名称；下拉菜单可把第一UV层快速重命名为 UVMap 或 UV0",
             "UV-数": "信息：显示当前模型包含的UV通道数量（此项按黄色信息提示展示）",
             "顶点-色数": "检测：模型是否包含顶点颜色层(Color Attributes)",
             "N多-边面": "检测：是否存在由5条或更多边组成的多边形面",
@@ -423,7 +424,7 @@ class ASSETSCHECKNEXT_OT_HeaderTooltip(bpy.types.Operator):
             "动画-检查": "检测：物体是否携带有动画时间轴的关键帧数据",
             "顶点-权重": "检测：静态网格体是否错误绑定了多余的顶点组(Vertex Groups)",
             "碰撞-检查": "检测：场景中是否存在与该物体绑定的UCX/UBX等UE专属简易碰撞体，且面数是否超标(>64面)",
-            "命名-规范": "SOP：所有材质统一 MI_材质名，禁止 M_；资产导出物体 SM_，项目独立部件允许无前缀；贴图 T_；任何名称不能出现 .001 之类的重复后缀",
+            "命名-规范": "SOP：物体 SM_物体名（无 .001 等后缀字样），材质 MI_材质名，贴图 T_；项目独立部件允许无前缀",
             "名数-匹配": "检测：物体名称是否与其网格数据块（Object Data）名称一致。在 Blender 中复制物体时网格数据名会保留原名，导致物体名和数据名不匹配",
         }
         return tt_dict.get(properties.col_name, properties.col_name)
@@ -571,6 +572,56 @@ class ASSETSCHECKNEXT_MT_QF_UVOverlap(bpy.types.Menu):
 
     def draw(self, context):
         self.layout.operator("assets_check_next.locate_uv_overlap", text="定位重叠UV")
+
+
+class ASSETSCHECKNEXT_MT_QF_UVName(bpy.types.Menu):
+    bl_idname = "ASSETSCHECKNEXT_MT_QF_UVName"
+    bl_label = "UV名称处理"
+
+    def draw(self, context):
+        self.layout.operator("assets_check_next.rename_uv_layer", text="第一UV层重命名为 UVMap").target_name = "UVMap"
+        self.layout.operator("assets_check_next.rename_uv_layer", text="第一UV层重命名为 UV0").target_name = "UV0"
+
+
+class ASSETSCHECKNEXT_OT_RenameUVLayer(bpy.types.Operator):
+    bl_idname = "assets_check_next.rename_uv_layer"
+    bl_label = "重命名UV层"
+    bl_description = "将选中网格的第一UV层重命名为指定名称"
+    bl_options = {"REGISTER", "UNDO"}
+
+    target_name: bpy.props.StringProperty(name="目标名称", default="UVMap")
+
+    @classmethod
+    def poll(cls, context):
+        return context.selected_objects
+
+    def execute(self, context):
+        renamed = 0
+        unchanged = 0
+        skipped = 0
+        for obj in context.selected_objects:
+            if obj.type != "MESH":
+                continue
+            uv_layers = obj.data.uv_layers
+            if not len(uv_layers):
+                continue
+            first = uv_layers[0]
+            if first.name == self.target_name:
+                unchanged += 1
+                continue
+            # 其它UV层占用目标名时跳过，避免追加 .001 后缀
+            if any(uv_layers[i].name == self.target_name for i in range(1, len(uv_layers))):
+                skipped += 1
+                continue
+            first.name = self.target_name
+            renamed += 1
+        message = f"已将 {renamed} 个物体的第一UV层重命名为 {self.target_name}"
+        if unchanged:
+            message += f"，{unchanged} 个已是该名称"
+        if skipped:
+            message += f"，{skipped} 个因其它UV层占用该名称已跳过"
+        self.report({"INFO"}, message)
+        return {"FINISHED"}
 
 
 class ASSETSCHECKNEXT_MT_QF_Ngon(bpy.types.Menu):

@@ -18,6 +18,7 @@ CHECK_LABELS = {
     "nonplanar_faces": "不平整面",
     "self_intersection": "交叉边面",
     "zero_edges": "零边检查",
+    "uv_name": "UV名称",
     "uv_layer_count": "UV数量",
     "vertex_color_count": "顶点色数",
     "ue_vertex_color_naming": "命名规范检查",
@@ -45,6 +46,7 @@ CHECK_LABELS_MATRIX = {
     "nonplanar_faces": "不平",
     "self_intersection": "交叉",
     "zero_edges": "零边",
+    "uv_name": "UV名",
     "uv_layer_count": "UV数",
     "vertex_color_count": "顶色",
     "ue_vertex_color_naming": "命名",
@@ -64,6 +66,7 @@ CHECK_LABELS_MATRIX_2LINE = {
     "missing_textures": ("贴图", "丢失"),
     "uv_bounds": ("UV", "越界"),
     "uv_overlap": ("UV", "重叠"),
+    "uv_name": ("UV", "名称"),
     "uv_layer_count": ("UV", "数"),
     "vertex_color_count": ("顶点", "色数"),
     "non_manifold": ("非流", "形边"),
@@ -94,6 +97,7 @@ def _enabled_check_ids(cfg):
         ("chk_transform", "transform"),
         ("chk_uv_bounds", "uv_bounds"),
         ("chk_uv_overlap", "uv_overlap"),
+        ("chk_uv_name", "uv_name"),
         ("chk_uv_layer_count", "uv_layer_count"),
         ("chk_vertex_color_count", "vertex_color_count"),
         ("chk_ngon", "ngon"),
@@ -297,6 +301,7 @@ def draw_assets_check_next_content(layout, context):
         uv_flow = uv_box.column_flow(columns=2, align=True)
         uv_flow.prop(cfg, "chk_uv_bounds")
         uv_flow.prop(cfg, "chk_uv_overlap")
+        uv_flow.prop(cfg, "chk_uv_name")
         uv_flow.prop(cfg, "chk_uv_layer_count")
         uv_flow.prop(cfg, "chk_vertex_color_count")
         uv_flow.prop(cfg, "chk_ignore_uv0")
@@ -377,6 +382,7 @@ def draw_assets_check_next_content(layout, context):
             "missing_textures": "ASSETSCHECKNEXT_MT_QF_MissingTextures",
             "uv_bounds": "ASSETSCHECKNEXT_MT_QF_UVBounds",
             "uv_overlap": "ASSETSCHECKNEXT_MT_QF_UVOverlap",
+            "uv_name": "ASSETSCHECKNEXT_MT_QF_UVName",
             "vertex_color_count": "ASSETSCHECKNEXT_MT_QF_VertexColor",
             "ngon": "ASSETSCHECKNEXT_MT_QF_Ngon",
             "non_manifold": "ASSETSCHECKNEXT_MT_QF_NonManifold",

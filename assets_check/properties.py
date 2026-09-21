@@ -13,8 +13,8 @@ from .presets import (
 def naming_standard_property():
     return bpy.props.EnumProperty(
         name="命名规范",
-        items=[("PROJECT", "项目资产（MI_）", "材质 MI_，项目独立部件允许无前缀；名称不能出现 .001 等重复后缀"),
-               ("ASSET", "资产导出（SM_ / MI_）", "物体 SM_，材质 MI_，贴图 T_；名称不能出现 .001 等重复后缀；符合部门 SOP")],
+        items=[("PROJECT", "项目资产（MI_）", "材质 MI_材质名，贴图 T_；项目独立部件允许无前缀；物体无 .001 等后缀字样"),
+               ("ASSET", "资产导出（SM_ / MI_）", "物体 SM_物体名（无 .001 等后缀字样），材质 MI_材质名，贴图 T_")],
         default="PROJECT",
     )
 
@@ -50,6 +50,7 @@ class ASSETSCHECKNEXT_AddonPreferences(bpy.types.AddonPreferences):
     chk_missing_textures: bpy.props.BoolProperty(name="贴图丢失", default=True)
     chk_uv_bounds: bpy.props.BoolProperty(name="UV越界检查", default=True)
     chk_uv_overlap: bpy.props.BoolProperty(name="UV重叠", default=True)
+    chk_uv_name: bpy.props.BoolProperty(name="UV名称", default=True)
     chk_uv_layer_count: bpy.props.BoolProperty(name="UV数量信息", default=True)
     chk_vertex_color_count: bpy.props.BoolProperty(name="顶点色", default=True)
     chk_ignore_uv0: bpy.props.BoolProperty(name="豁免UV0(允许重叠/越界)", default=True)
@@ -110,6 +111,7 @@ class ASSETSCHECKNEXT_Props(bpy.types.PropertyGroup):
     chk_self_intersection: bpy.props.BoolProperty(name="交叉边面", default=True)
     chk_zero_edges: bpy.props.BoolProperty(name="零边检查", default=True)
 
+    chk_uv_name: bpy.props.BoolProperty(name="UV名称", default=True)
     chk_uv_layer_count: bpy.props.BoolProperty(name="UV数量信息", default=True)
     chk_vertex_color_count: bpy.props.BoolProperty(name="顶点色", default=True)
     chk_ue_vertex_color_naming: bpy.props.BoolProperty(name="命名不合规", default=True)

@@ -12,6 +12,7 @@ from .normal_direction import run as run_normal_direction
 from .nonplanar_faces import run as run_nonplanar_faces
 from .self_intersection import run as run_self_intersection
 from .zero_edges import run as run_zero_edges
+from .uv_name import run as run_uv_name
 from .uv_layer_count import run as run_uv_layer_count
 from .vertex_color_count import run as run_vertex_color_count
 from .ue_vertex_color_naming import run as run_ue_vertex_color_naming
@@ -88,6 +89,8 @@ def run_checks_for_object(obj, context, props, *, colliders=None):
             rows.append(_call_check(run_zero_edges, obj, context, props, bm=shared_bm))
 
         # C: UV/顶点色包
+        if props.chk_uv_name:
+            rows.append(_call_check(run_uv_name, obj, context, props))
         if props.chk_uv_layer_count:
             rows.append(_call_check(run_uv_layer_count, obj, context, props))
         if props.chk_vertex_color_count:

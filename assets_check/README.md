@@ -1,8 +1,8 @@
-# 资产审查助手 v3.2.0
+# 资产审查助手 v3.3.0
 
 本版内置「项目资产要求」「资产导出要求」「全部检查」；个人预设独立保存于 Blender 用户配置目录，可导入/导出迁移。内置预设始终保留。
 
-v3.2.0 变更：勾选「豁免UV0」时，UV0 的重叠/越界降级为黄色 WARN（UV1 及以上仍标红）；命名规范检查明确禁止 `.001` 等重复后缀，物体/材质/贴图任一命中即标红并写明原因。
+v3.3.0 变更：结果矩阵新增「UV名称」列（显示 UV 层名称，菜单可把第一UV层快速重命名为 UVMap/UV0）；命名规范提示措辞更新为 物体 SM_物体名（无 .001 等后缀字样）、材质 MI_材质名、贴图 T_。
 
 报告按钮分为「Twin 用模型报告」（完整检查明细）和「模型报告（地编）」（SOP 第2.1节七项验收自查表），均输出 CSV/JSON。每个网格一张七项表，列名与顺序遵循原文；需要人工确认的结果留空并说明原因。升级后首次导出及修改模型后请重新检查。UE 简易碰撞检查已从界面、执行入口及报告中移除。
 
@@ -16,7 +16,7 @@ v3.2.0 变更：勾选「豁免UV0」时，UV0 的重叠/越界降级为黄色 W
   - 基础：`ngon`、`empty_material_slot`、`transform`、`missing_textures`、`uv_bounds`、`uv_overlap`
   - A 拓扑包：`non_manifold`、`loose_geometry`、`doubled_vertices`、`poles`
   - B 法线/几何包：`normal_direction`、`nonplanar_faces`、`self_intersection`、`zero_edges`
-  - C UV/顶点色包：`uv_layer_count`、`vertex_color_count`、`ue_vertex_color_naming`
+  - C UV/顶点色包：`uv_name`、`uv_layer_count`、`vertex_color_count`、`ue_vertex_color_naming`
   - D 物体数据包：`apply_scale`、`transform_zero`、`pivot_position`、`modifier`、`animation`、`vertex_weight`
 - 一键修复（无争议项）：清理空材质槽、清理游离几何、应用 Transform
 - 结果汇总（PASS/WARN/FAIL）

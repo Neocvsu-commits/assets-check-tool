@@ -334,17 +334,14 @@ def draw_assets_check_next_content(layout, context):
 
         naming_box = checks_box.box()
         naming_box.label(text="命名规范 (Naming)", icon="SYNTAX_OFF")
-        naming_box.prop(cfg, "naming_standard", text="")
         naming_box.prop(cfg, "chk_ue_vertex_color_naming")
 
     btn_col = layout.column(align=False)
-    btn_col.scale_y = 1.5
-    btn_row = btn_col.row(align=True)
-    btn_row.operator("assets_check_next.run_checks", text="开始检查", icon_value=get_icon_id("timer-outline.png"))
-    btn_row.operator("assets_check_next.auto_fix_basic", text="一键修复", icon="TOOL_SETTINGS")
-    export_row = btn_col.row(align=True)
-    export_row.operator("assets_check_next.export_report", text="Twin 用模型报告", icon="EXPORT")
-    export_row.operator("assets_check_next.export_model_report", text="模型报告（地编）", icon="EXPORT")
+    btn_col.scale_y = 1.2
+    btn_col.operator("assets_check_next.run_checks", text="开始检查", icon_value=get_icon_id("timer-outline.png"))
+    btn_col.operator("assets_check_next.auto_fix_basic", text="一键修复", icon="TOOL_SETTINGS")
+    btn_col.operator("assets_check_next.export_report", text="资产库模型报告", icon="EXPORT")
+    btn_col.operator("assets_check_next.export_model_report", text="模型报告（地编）", icon="EXPORT")
 
     layout.separator(factor=1.0)
     info_split = layout.split(factor=0.30, align=True)

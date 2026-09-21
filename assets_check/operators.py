@@ -816,14 +816,14 @@ class ASSETSCHECKNEXT_OT_SelectResultObject(bpy.types.Operator):
 
 class ASSETSCHECKNEXT_OT_ExportReport(bpy.types.Operator, ExportHelper):
     bl_idname = "assets_check_next.export_report"
-    bl_label = "Twin 用模型报告"
+    bl_label = "资产库模型报告"
     bl_description = "完整检查明细，每个模型的每项检查一行；同时导出 CSV 和 JSON"
     filename_ext = ".csv"
     filter_glob: bpy.props.StringProperty(default="*.csv", options={"HIDDEN"})
 
     def invoke(self, context, event):
         if not self.filepath:
-            self.filepath = "Twin用模型报告.csv"
+            self.filepath = "资产库模型报告.csv"
         return ExportHelper.invoke(self, context, event)
 
     def execute(self, context):
@@ -833,7 +833,7 @@ class ASSETSCHECKNEXT_OT_ExportReport(bpy.types.Operator, ExportHelper):
         except (OSError, ValueError, TypeError) as exc:
             self.report({"ERROR"}, f"导出失败：{exc}")
             return {"CANCELLED"}
-        self.report({"INFO"}, f"Twin 用模型报告已导出（CSV、JSON）：{self.filepath}")
+        self.report({"INFO"}, f"资产库模型报告已导出（CSV、JSON）：{self.filepath}")
         return {"FINISHED"}
 
 

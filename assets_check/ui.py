@@ -423,7 +423,8 @@ def draw_assets_check_next_content(layout, context):
             cell = parent.box().column(align=True)
             cell.scale_y = 0.8
             for label in (first, second):
-                op = cell.operator("assets_check_next.header_tooltip", text=label or " ", emboss=False)
+                # 关闭翻译：界面词典会把 UV 等词条译成冗长名称（如 UV纹理坐标）
+                op = cell.operator("assets_check_next.header_tooltip", text=label or " ", emboss=False, translate=False)
                 op.col_name = tooltip
 
         title_cell(header_left, "名称", "", "名称")
@@ -489,7 +490,8 @@ def draw_assets_check_next_content(layout, context):
                             "assets_check_next.cell_tooltip",
                             text=display_value, emboss=False, translate=False,
                         )
-                        op.tooltip = str(cell_data.get("message", ""))
+                        # 尾部零宽空格：避免 tooltip 文本命中界面翻译词条（如 UVMap -> UV贴图）
+                        op.tooltip = str(cell_data.get("message", "")) + "​"
                     else:
                         row.label(text=display_value, translate=False)
                     if cid in {"uv_layer_count", "vertex_color_count"}:

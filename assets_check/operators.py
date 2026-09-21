@@ -590,8 +590,8 @@ class ASSETSCHECKNEXT_MT_QF_UVName(bpy.types.Menu):
     bl_label = "UV名称处理"
 
     def draw(self, context):
-        self.layout.operator("assets_check_next.rename_uv_layer", text="第一UV层重命名为 UVMap").target_name = "UVMap"
-        self.layout.operator("assets_check_next.rename_uv_layer", text="第一UV层重命名为 UV0").target_name = "UV0"
+        self.layout.operator("assets_check_next.rename_uv_layer", text="重命名为UVMap", translate=False).target_name = "UVMap"
+        self.layout.operator("assets_check_next.rename_uv_layer", text="重命名为UV0", translate=False).target_name = "UV0"
 
 
 class ASSETSCHECKNEXT_OT_RenameUVLayer(bpy.types.Operator):

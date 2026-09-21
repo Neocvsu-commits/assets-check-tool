@@ -16,6 +16,6 @@ def run(obj, context, props):
     return {
         "check_id": "uv_name",
         "status": "WARN",  # 信息项沿用WARN计数，但UI以文本展示
-        "message": f"UV层名称: {names}",
+        "message": names,  # 完整层名，供单元格悬浮提示
         "display_value": display,
     }

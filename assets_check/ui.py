@@ -280,10 +280,10 @@ def draw_assets_check_next_content(layout, context):
     col_preset_ops.operator("assets_check_next.preset_move_down", text="", icon="TRIA_DOWN")
     col_preset_ops.operator("assets_check_next.preset_remove_active", text="", icon="X")
     row_io = box_presets.row(align=True)
-    row_io.operator("assets_check_next.preset_quick_save", text="保存", icon="FILE_TICK")
-    row_io.operator("assets_check_next.preset_reset_default", text="恢复", icon="LOOP_BACK")
-    row_io.operator("assets_check_next.preset_import", text="导入", icon="IMPORT")
-    row_io.operator("assets_check_next.preset_export_dialog", text="导出", icon="EXPORT")
+    row_io.operator("assets_check_next.preset_quick_save", text="保存", icon="FILE_TICK", emboss=False)
+    row_io.operator("assets_check_next.preset_reset_default", text="恢复", icon="LOOP_BACK", emboss=False)
+    row_io.operator("assets_check_next.preset_import", text="导入", icon="IMPORT", emboss=False)
+    row_io.operator("assets_check_next.preset_export_dialog", text="导出", icon="EXPORT", emboss=False)
 
 
     checks_box = layout.box()
@@ -339,10 +339,11 @@ def draw_assets_check_next_content(layout, context):
     btn_col = layout.column(align=False)
     btn_col.scale_y = 1.2
     btn_row = btn_col.row(align=True)
+    # 高频操作保持实体按钮突出；报告导出为低频操作，用扁平样式弱化
     btn_row.operator("assets_check_next.run_checks", text="开始检查", icon_value=get_icon_id("timer-outline.png"))
     btn_row.operator("assets_check_next.auto_fix_basic", text="一键修复", icon="TOOL_SETTINGS")
-    btn_row.operator("assets_check_next.export_report", text="资产库模型报告", icon="EXPORT")
-    btn_row.operator("assets_check_next.export_model_report", text="模型报告（地编）", icon="EXPORT")
+    btn_row.operator("assets_check_next.export_report", text="资产库模型报告", icon="EXPORT", emboss=False)
+    btn_row.operator("assets_check_next.export_model_report", text="模型报告（地编）", icon="EXPORT", emboss=False)
 
     layout.separator(factor=1.0)
     info_split = layout.split(factor=0.30, align=True)

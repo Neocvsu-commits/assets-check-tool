@@ -504,6 +504,8 @@ class ASSETSCHECKNEXT_OT_QuickFixAction(bpy.types.Operator):
                         bpy.ops.mesh.remove_doubles(threshold=0.0001)
                         bpy.ops.object.mode_set(mode="OBJECT")
                     elif self.action == "AUTOFILL_NAMING_PREFIX":
+                        if not obj.name.startswith("SM_"):
+                            obj.name = f"SM_{obj.name}"
                         prefix = "MI_"
                         for slot in obj.material_slots:
                             mat = slot.material

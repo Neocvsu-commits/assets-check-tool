@@ -2,7 +2,8 @@ import re
 
 # Blender 重名自动后缀，如 Wall.001 / MI_Wood.002
 _DUP_SUFFIX = re.compile(r'\.\d+$')
-_NAME = re.compile(r'^[A-Za-z0-9_]+$')
+# 支持命名多样性：字母、数字、下划线、横杠、点、正反斜杠（前缀与 .001 规则单独校验）
+_NAME = re.compile(r'^[A-Za-z0-9_\-./\\]+$')
 _IMAGE_EXT = re.compile(r'\.(png|jpe?g|tga|exr|tiff?|bmp|psd|hdr)$', re.IGNORECASE)
 
 
@@ -15,11 +16,12 @@ def _fail(message):
 
 
 def run(obj, context, props):
-    # 项目模式：物体允许无前缀，但字符集与重复后缀仍受限
     if _dup_suffix(obj.name):
         return _fail(f"物体名不能出现 .001 之类的重复后缀：{obj.name}")
     if not _NAME.fullmatch(obj.name):
-        return _fail("物体命名不合规（只能用字母、数字、下划线）")
+        return _fail(f"物体命名不合规（含不支持的字符）：{obj.name}")
+    if not (obj.name.startswith("SM_") and len(obj.name) > 3):
+        return _fail(f"物体命名不合规，应以 SM_ 开头：{obj.name}")
 
     for mat_slot in obj.material_slots:
         mat = mat_slot.material

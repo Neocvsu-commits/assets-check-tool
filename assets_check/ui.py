@@ -279,12 +279,6 @@ def draw_assets_check_next_content(layout, context):
     col_preset_ops.operator("assets_check_next.preset_move_up", text="", icon="TRIA_UP")
     col_preset_ops.operator("assets_check_next.preset_move_down", text="", icon="TRIA_DOWN")
     col_preset_ops.operator("assets_check_next.preset_remove_active", text="", icon="X")
-    row_io = box_presets.row(align=True)
-    row_io.operator("assets_check_next.preset_quick_save", text="保存", icon="FILE_TICK")
-    row_io.operator("assets_check_next.preset_reset_default", text="恢复", icon="LOOP_BACK")
-    row_io.operator("assets_check_next.preset_import", text="导入", icon="IMPORT")
-    row_io.operator("assets_check_next.preset_export_dialog", text="导出", icon="EXPORT")
-
 
     checks_box = layout.box()
     header_row = checks_box.row(align=True)

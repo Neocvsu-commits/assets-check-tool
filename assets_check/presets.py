@@ -17,14 +17,14 @@ CHECK_KEYS = (
 PRESET_KEYS = (*CHECK_KEYS, 'naming_standard')
 ALL_CHECKS = {**dict.fromkeys(CHECK_KEYS, True), 'naming_standard': 'PROJECT'}
 BUILTIN_PRESETS = {
-    '项目资产要求': {
+    '项目模型': {
         **ALL_CHECKS, 'naming_standard': 'PROJECT',
         'chk_uv_bounds': False, 'chk_uv_overlap': False,
         'chk_transform': False, 'chk_transform_zero': False, 'chk_pivot_position': False,
         'chk_object_data_name_match': False, 'chk_poles': False,
     },
-    '资产导出要求': {**ALL_CHECKS, 'chk_ignore_uv0': False},
-    '全部检查': dict(ALL_CHECKS),
+    '资产库模型（四方）': {**ALL_CHECKS, 'chk_ignore_uv0': False},
+    '资产库模型（独立）': dict(ALL_CHECKS),
 }
 
 

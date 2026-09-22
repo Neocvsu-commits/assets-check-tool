@@ -1,5 +1,5 @@
 {
-  "项目资产要求": {
+  "项目模型": {
     "chk_ngon": true,
     "chk_empty_material_slot": true,
     "chk_transform": false,
@@ -29,7 +29,7 @@
     "chk_object_data_name_match": false,
     "naming_standard": "PROJECT"
   },
-  "资产导出要求": {
+  "资产库模型（四方）": {
     "chk_ngon": true,
     "chk_empty_material_slot": true,
     "chk_transform": true,
@@ -59,7 +59,7 @@
     "chk_object_data_name_match": true,
     "naming_standard": "PROJECT"
   },
-  "全部检查": {
+  "资产库模型（独立）": {
     "chk_ngon": true,
     "chk_empty_material_slot": true,
     "chk_transform": true,

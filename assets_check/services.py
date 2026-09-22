@@ -1,10 +1,31 @@
 import json
 from datetime import datetime
 
+import bpy
+
 from .checks import run_checks_for_object
 from .properties import sync_preferences_to_scene_props
 from .reports import model_snapshot
 from .presets import collect_preset_data
+
+
+_AUTO_CHECK_DELAY = 0.3
+
+
+def schedule_auto_check():
+    """切换检查项后去抖延迟执行自动检查：短时间内多次改动合并为一次."""
+    try:
+        bpy.app.timers.unregister(_auto_check_timer)
+    except ValueError:
+        pass
+    bpy.app.timers.register(_auto_check_timer, first_interval=_AUTO_CHECK_DELAY)
+
+
+def _auto_check_timer():
+    context = bpy.context
+    if context and context.scene and context.selected_objects:
+        run_checks_and_store(context.scene, context)
+    return None
 
 
 def run_checks_and_store(scene, context):

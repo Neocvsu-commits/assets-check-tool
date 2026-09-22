@@ -2,6 +2,7 @@ from .ngon import run as run_ngon
 from .empty_material_slot import run as run_empty_material_slot
 from .transform import run as run_transform
 from .missing_textures import run as run_missing_textures
+from .material_count import run as run_material_count
 from .uv_bounds import run as run_uv_bounds
 from .uv_overlap import run as run_uv_overlap
 from .non_manifold import run as run_non_manifold
@@ -63,6 +64,8 @@ def run_checks_for_object(obj, context, props, *, colliders=None):
             rows.append(_call_check(run_transform, obj, context, props))
         if props.chk_missing_textures:
             rows.append(_call_check(run_missing_textures, obj, context, props))
+        if props.chk_material_count:
+            rows.append(_call_check(run_material_count, obj, context, props))
         if props.chk_uv_bounds:
             rows.append(_call_check(run_uv_bounds, obj, context, props))
         if props.chk_uv_overlap:

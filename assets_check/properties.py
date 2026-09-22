@@ -93,6 +93,7 @@ class ASSETSCHECKNEXT_AddonPreferences(bpy.types.AddonPreferences):
         size_box.label(text="界面尺寸（像素）", icon="PREFERENCES")
         for prop_name in ("ui_name_width", "ui_face_width", "ui_check_width", "ui_popup_width"):
             size_box.prop(self, prop_name)
+        size_box.operator("assets_check_next.reset_ui_size", text="恢复默认尺寸", icon="LOOP_BACK")
         draw_support_preferences(self.layout, context)
 
 

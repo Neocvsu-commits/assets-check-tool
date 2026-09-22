@@ -450,6 +450,25 @@ class ASSETSCHECKNEXT_OT_CellTooltip(bpy.types.Operator):
         return {"FINISHED"}
 
 
+class ASSETSCHECKNEXT_OT_ResetUISize(bpy.types.Operator):
+    bl_idname = "assets_check_next.reset_ui_size"
+    bl_label = "恢复默认尺寸"
+    bl_description = "将界面尺寸参数恢复为默认值（名称100 / 面数65 / 检查列35 / 弹窗自动）"
+    bl_options = {"REGISTER"}
+
+    def execute(self, context):
+        addon = context.preferences.addons.get(__package__)
+        prefs = addon.preferences if addon else None
+        if not prefs:
+            self.report({"WARNING"}, "未找到插件偏好设置")
+            return {"CANCELLED"}
+        for name in ("ui_name_width", "ui_face_width", "ui_check_width", "ui_popup_width"):
+            default = int(prefs.bl_rna.properties[name].default)
+            setattr(prefs, name, default)
+        self.report({"INFO"}, "界面尺寸已恢复默认")
+        return {"FINISHED"}
+
+
 class ASSETSCHECKNEXT_OT_QuickFixStub(bpy.types.Operator):
     bl_idname = "assets_check_next.quick_fix_stub"
     bl_label = "功能待迁移"

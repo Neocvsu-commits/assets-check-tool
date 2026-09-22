@@ -6,7 +6,7 @@ import bpy
 
 
 CHECK_KEYS = (
-    'chk_ngon', 'chk_empty_material_slot', 'chk_transform', 'chk_missing_textures',
+    'chk_ngon', 'chk_empty_material_slot', 'chk_transform', 'chk_missing_textures', 'chk_material_count',
     'chk_uv_bounds', 'chk_uv_overlap', 'chk_uv_name', 'chk_uv_layer_count', 'chk_vertex_color_count',
     'chk_ignore_uv0', 'chk_non_manifold', 'chk_ignore_manifold_open',
     'chk_loose_geometry', 'chk_doubled_vertices', 'chk_poles', 'chk_normal_direction',
@@ -23,8 +23,8 @@ BUILTIN_PRESETS = {
         'chk_transform': False, 'chk_transform_zero': False, 'chk_pivot_position': False,
         'chk_object_data_name_match': False, 'chk_poles': False,
     },
-    '资产库模型（四方）': {**ALL_CHECKS, 'chk_ignore_uv0': False},
-    '资产库模型（独立）': dict(ALL_CHECKS),
+    '资产库模型（独立贴图）': {**ALL_CHECKS, 'chk_ignore_uv0': False},
+    '资产库模型（四方贴图）': dict(ALL_CHECKS),
 }
 
 

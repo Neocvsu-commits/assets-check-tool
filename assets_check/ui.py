@@ -8,6 +8,7 @@ CHECK_LABELS = {
     "empty_material_slot": "空材质槽",
     "transform": "变换检查",
     "missing_textures": "贴图丢失",
+    "material_count": "材质球数量",
     "uv_bounds": "UV越界",
     "uv_overlap": "UV重叠",
     "non_manifold": "非流形边",
@@ -36,6 +37,7 @@ CHECK_LABELS_MATRIX = {
     "empty_material_slot": "空材",
     "transform": "变换",
     "missing_textures": "贴图",
+    "material_count": "材质数",
     "uv_bounds": "UV越",
     "uv_overlap": "UV叠",
     "non_manifold": "非流",
@@ -64,6 +66,7 @@ CHECK_LABELS_MATRIX_2LINE = {
     "empty_material_slot": ("空材", "质槽"),
     "transform": ("变换", "检查"),
     "missing_textures": ("贴图", "丢失"),
+    "material_count": ("材质", "数量"),
     "uv_bounds": ("UV", "越界"),
     "uv_overlap": ("UV", "重叠"),
     "uv_name": ("UV", "名称"),
@@ -94,6 +97,7 @@ def _enabled_check_ids(cfg):
     mapping = [
         ("chk_empty_material_slot", "empty_material_slot"),
         ("chk_missing_textures", "missing_textures"),
+        ("chk_material_count", "material_count"),
         ("chk_transform", "transform"),
         ("chk_uv_bounds", "uv_bounds"),
         ("chk_uv_overlap", "uv_overlap"),
@@ -140,6 +144,10 @@ def _status_color(status: str):
     return (0.8, 0.8, 0.2, 1.0)
 
 
+# 信息列超过阈值时加黄色提示点：UV多层、顶点色数、材质球数（SOP 不超过20）
+_INFO_LIMITS = {"uv_layer_count": 1, "vertex_color_count": 1, "material_count": 20}
+
+
 def _draw_center_label(layout, text, *, translate=True):
     row = layout.row(align=True)
     row.alignment = "CENTER"
@@ -173,26 +181,6 @@ def _build_result_matrix(results):
             "message": item.message,
         }
     return matrix
-
-
-def _check_column_weights(check_ids):
-    """右侧列基本均分，UV名称列稍宽以容纳 "UVMap.." 缩写."""
-    return [1.6 if cid == "uv_name" else 1.0 for cid in check_ids]
-
-
-def _split_cells(parent, weights):
-    """把一行按权重切分为多个 cell；嵌套 split 保证各行列边界对齐."""
-    cells = []
-    remaining = float(sum(weights)) or 1.0
-    rest = parent
-    for weight in weights[:-1]:
-        factor = max(0.01, min(0.99, weight / remaining))
-        split = rest.split(factor=factor, align=True)
-        cells.append(split.column())
-        rest = split.row()
-        remaining -= weight
-    cells.append(rest)
-    return cells
 
 
 def _iter_matrix_rows(context, ui_state, result_matrix, check_ids):
@@ -310,6 +298,7 @@ def draw_assets_check_next_content(layout, context):
         mat_flow = mat_box.column_flow(columns=2, align=True)
         mat_flow.prop(cfg, "chk_empty_material_slot")
         mat_flow.prop(cfg, "chk_missing_textures")
+        mat_flow.prop(cfg, "chk_material_count")
 
         uv_box = checks_box.box()
         uv_box.label(text="UV与颜色 (UVs & Colors)", icon="UV")
@@ -390,7 +379,6 @@ def draw_assets_check_next_content(layout, context):
         left_factor = 0.24
         name_factor = 0.72
         table_col = matrix_box.column(align=True)
-        check_weights = _check_column_weights(check_ids)
 
         menu_map = {
             "empty_material_slot": "ASSETSCHECKNEXT_MT_QF_EmptyMaterial",
@@ -422,13 +410,13 @@ def draw_assets_check_next_content(layout, context):
         menu_left = menu_split.split(factor=name_factor, align=True)
         menu_left.label(text=" ")
         menu_left.label(text=" ")
-        menu_cells = _split_cells(menu_split.row(align=True), check_weights)
-        for cell_layout, cid in zip(menu_cells, check_ids):
+        menu_right = menu_split.row(align=True)
+        for cid in check_ids:
             menu_id = menu_map.get(cid)
             if menu_id:
-                cell_layout.menu(menu_id, text="", icon_value=0)
+                menu_right.menu(menu_id, text="", icon_value=0)
             else:
-                cell_layout.label(text=" ")
+                menu_right.label(text=" ")
 
         header_split = table_col.split(factor=left_factor, align=True)
         header_left = header_split.split(factor=name_factor, align=True)
@@ -443,10 +431,10 @@ def draw_assets_check_next_content(layout, context):
 
         title_cell(header_left, "名称", "", "名称")
         title_cell(header_left, "面数", "", "面数")
-        header_cells = _split_cells(header_split.row(align=True), check_weights)
-        for cell_layout, cid in zip(header_cells, check_ids):
+        header_right = header_split.row(align=True)
+        for cid in check_ids:
             first, second = CHECK_LABELS_MATRIX_2LINE.get(cid, (CHECK_LABELS_MATRIX.get(cid, cid), ""))
-            title_cell(cell_layout, first, second, f"{first}-{second}")
+            title_cell(header_right, first, second, f"{first}-{second}")
 
         # 第二横条：排序箭头
         sort_split = table_col.split(factor=left_factor, align=True)
@@ -465,9 +453,9 @@ def draw_assets_check_next_content(layout, context):
             emboss=False,
         ).sort_col = 1
 
-        sort_cells = _split_cells(sort_split.row(align=True), check_weights)
-        for idx, cell_layout in enumerate(sort_cells):
-            sbox = cell_layout.box()
+        sort_right = sort_split.row(align=True)
+        for idx, cid in enumerate(check_ids):
+            sbox = sort_right.box()
             sbox.operator(
                 "assets_check_next.sort_matrix", text=" ",
                 icon_value=get_icon_id("caret-down-outline.png") if (ui_state.sort_col == idx + 2 and not ui_state.sort_reverse) else (get_icon_id("caret-up-outline.png") if ui_state.sort_col == idx + 2 else 0),
@@ -489,10 +477,10 @@ def draw_assets_check_next_content(layout, context):
             data_face_box = data_left.box()
             data_face_box.label(text=str(face_count))
 
-            data_cells = _split_cells(data_split.row(align=True), check_weights)
-            for cell_layout, cid in zip(data_cells, check_ids):
+            data_right = data_split.row(align=True)
+            for cid in check_ids:
                 cell_data = checks.get(cid, {})
-                cell = cell_layout.box()
+                cell = data_right.box()
                 display_value = ""
                 if isinstance(cell_data, dict):
                     display_value = str(cell_data.get("display_value", ""))
@@ -509,9 +497,10 @@ def draw_assets_check_next_content(layout, context):
                         op.tooltip = full if full != display_value else ""
                     else:
                         row.label(text=display_value, translate=False)
-                    if cid in {"uv_layer_count", "vertex_color_count"}:
+                    info_limit = _INFO_LIMITS.get(cid)
+                    if info_limit is not None:
                         try:
-                            if int(display_value) > 1:
+                            if int(display_value) > info_limit:
                                 row.template_node_socket(color=(0.8, 0.8, 0.2, 1.0))
                         except ValueError:
                             pass

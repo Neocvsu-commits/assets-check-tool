@@ -885,7 +885,7 @@ class ASSETSCHECKNEXT_OT_OpenPopup(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def invoke(self, context, event):
-        return context.window_manager.invoke_props_dialog(self, width=1200)
+        return context.window_manager.invoke_props_dialog(self, width=1400)
 
     def execute(self, context):
         return {"FINISHED"}

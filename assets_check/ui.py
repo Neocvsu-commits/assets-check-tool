@@ -152,9 +152,9 @@ def _matrix_layout_metrics(context, check_ids):
     """矩阵布局度量：返回 (弹窗宽度, left_factor, name_factor)，均由偏好设置尺寸参数计算."""
     addon = context.preferences.addons.get(__package__)
     prefs = addon.preferences if addon else None
-    name_w = int(getattr(prefs, "ui_name_width", 210) or 210)
-    face_w = int(getattr(prefs, "ui_face_width", 55) or 55)
-    check_w = int(getattr(prefs, "ui_check_width", 39) or 39)
+    name_w = int(getattr(prefs, "ui_name_width", 100) or 100)
+    face_w = int(getattr(prefs, "ui_face_width", 65) or 65)
+    check_w = int(getattr(prefs, "ui_check_width", 35) or 35)
     override = int(getattr(prefs, "ui_popup_width", 0) or 0)
     auto_w = 40 + name_w + face_w + len(check_ids) * check_w
     popup_w = override if override > 0 else auto_w

@@ -74,13 +74,13 @@ class ASSETSCHECKNEXT_AddonPreferences(bpy.types.AddonPreferences):
 
     # 界面尺寸参数（像素）：控制检查矩阵列宽与弹窗宽度
     ui_name_width: bpy.props.IntProperty(
-        name="名称列宽度", default=210, min=60, max=600,
+        name="名称列宽度", default=100, min=60, max=600,
         description="检查矩阵中物体名称列的宽度（像素）")
     ui_face_width: bpy.props.IntProperty(
-        name="面数列宽度", default=55, min=30, max=300,
+        name="面数列宽度", default=65, min=30, max=300,
         description="检查矩阵中面数列的宽度（像素）")
     ui_check_width: bpy.props.IntProperty(
-        name="检查列宽度", default=39, min=20, max=200,
+        name="检查列宽度", default=35, min=20, max=200,
         description="每个检查列的宽度（像素），所有检查列等宽")
     ui_popup_width: bpy.props.IntProperty(
         name="弹窗宽度", default=0, min=0, max=3000,

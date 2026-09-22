@@ -375,8 +375,8 @@ def draw_assets_check_next_content(layout, context):
             matrix_box.label(text="筛选后无结果")
             return
 
-        # 与 v1 同构：左侧信息区固定比例，名称/面数内部再按 70/30 划分
-        left_factor = 0.24
+        # 与 v1 同构：左侧信息区固定比例（名称/面数收窄给检查列留空间），名称/面数内部再划分
+        left_factor = 0.20
         name_factor = 0.72
         table_col = matrix_box.column(align=True)
 
@@ -423,6 +423,7 @@ def draw_assets_check_next_content(layout, context):
 
         def title_cell(parent, first, second, tooltip):
             cell = parent.box().column(align=True)
+            cell.alignment = "CENTER"
             cell.scale_y = 0.8
             for label in (first, second):
                 # 关闭翻译：界面词典会把 UV 等词条译成冗长名称（如 UV纹理坐标）
@@ -469,12 +470,14 @@ def draw_assets_check_next_content(layout, context):
             data_left = data_split.split(factor=name_factor, align=True)
             data_name_box = data_left.box()
             name_row = data_name_box.row(align=True)
+            name_row.alignment = "CENTER"
             active_obj = context.view_layer.objects.active
             is_active = active_obj and active_obj.name == obj_name
             op_pin = name_row.operator("assets_check_next.select_result_object", text="", icon_value=get_icon_id("location-pin.png"), emboss=is_active)
             op_pin.object_name = obj_name
             name_row.label(text=_display_object_name(obj_name), translate=False)
             data_face_box = data_left.box()
+            data_face_box.alignment = "CENTER"
             data_face_box.label(text=str(face_count))
 
             data_right = data_split.row(align=True)
@@ -487,6 +490,7 @@ def draw_assets_check_next_content(layout, context):
 
                 if display_value != "":
                     row = cell.row(align=True)
+                    row.alignment = "CENTER"
                     if cid == "uv_name":
                         op = row.operator(
                             "assets_check_next.cell_tooltip",
@@ -509,6 +513,7 @@ def draw_assets_check_next_content(layout, context):
                 else:
                     status = cell_data.get("status", "WARN") if isinstance(cell_data, dict) else "WARN"
                     col_dot = cell.column(align=True)
+                    col_dot.alignment = "CENTER"
                     col_dot.template_node_socket(color=_status_color(status))
                     spacer = col_dot.column(align=True)
                     spacer.scale_y = 1e-9

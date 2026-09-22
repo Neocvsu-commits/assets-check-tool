@@ -144,6 +144,22 @@ def _status_color(status: str):
 _INFO_LIMITS = {"uv_layer_count": 1, "vertex_color_count": 1}
 
 
+def _matrix_layout_metrics(context, check_ids):
+    """矩阵布局度量：返回 (弹窗宽度, left_factor, name_factor)，均由偏好设置尺寸参数计算."""
+    addon = context.preferences.addons.get(__package__)
+    prefs = addon.preferences if addon else None
+    name_w = int(getattr(prefs, "ui_name_width", 210) or 210)
+    face_w = int(getattr(prefs, "ui_face_width", 55) or 55)
+    check_w = int(getattr(prefs, "ui_check_width", 39) or 39)
+    override = int(getattr(prefs, "ui_popup_width", 0) or 0)
+    auto_w = 40 + name_w + face_w + len(check_ids) * check_w
+    popup_w = override if override > 0 else auto_w
+    body_w = max(popup_w - 40, name_w + face_w + 10)
+    left_factor = min(max((name_w + face_w) / float(body_w), 0.05), 0.7)
+    name_factor = name_w / float(name_w + face_w)
+    return popup_w, left_factor, name_factor
+
+
 def _draw_center_label(layout, text, *, translate=True):
     row = layout.row(align=True)
     row.alignment = "CENTER"
@@ -370,9 +386,8 @@ def draw_assets_check_next_content(layout, context):
             matrix_box.label(text="筛选后无结果")
             return
 
-        # 与 v1 同构：左侧信息区固定比例，名称/面数内部再按 70/30 划分
-        left_factor = 0.24
-        name_factor = 0.72
+        # 列宽由偏好设置的尺寸参数计算（名称/面数/检查列），弹窗宽度同源
+        _, left_factor, name_factor = _matrix_layout_metrics(context, check_ids)
         table_col = matrix_box.column(align=True)
 
         menu_map = {

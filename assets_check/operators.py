@@ -883,8 +883,17 @@ class ASSETSCHECKNEXT_OT_OpenPopup(bpy.types.Operator):
     bl_description = "打开资产审查弹窗"
     bl_options = {"REGISTER", "UNDO"}
 
+    @staticmethod
+    def _preferred_width(context):
+        """弹窗宽度：由偏好设置的尺寸参数计算（ui_popup_width>0 时直接使用）."""
+        from .ui import _enabled_check_ids, _matrix_layout_metrics
+        addon = context.preferences.addons.get(__package__)
+        cfg = addon.preferences if addon else context.scene.assets_check_next_props
+        width, _, _ = _matrix_layout_metrics(context, _enabled_check_ids(cfg))
+        return max(520, width)
+
     def invoke(self, context, event):
-        return context.window_manager.invoke_props_dialog(self, width=1200)
+        return context.window_manager.invoke_props_dialog(self, width=self._preferred_width(context))
 
     def execute(self, context):
         return {"FINISHED"}

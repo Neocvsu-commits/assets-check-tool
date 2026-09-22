@@ -21,6 +21,15 @@ def schedule_auto_check():
     bpy.app.timers.register(_auto_check_timer, first_interval=_AUTO_CHECK_DELAY)
 
 
+def run_auto_check_now():
+    """立即（下一帧）执行自动检查：取消等待中的去抖 timer，预设切换等场景使用."""
+    try:
+        bpy.app.timers.unregister(_auto_check_timer)
+    except ValueError:
+        pass
+    bpy.app.timers.register(_auto_check_timer, first_interval=0.0)
+
+
 def _auto_check_timer():
     context = bpy.context
     if context and context.scene and context.selected_objects:

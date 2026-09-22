@@ -132,6 +132,9 @@ def update_active_preset_index(self, context):
             addon = context.preferences.addons.get(__package__)
             if addon:
                 apply_preset_data(addon.preferences, cfg)
+            # 预设切换后立即（下一帧）刷新检查结果
+            from .services import run_auto_check_now
+            run_auto_check_now()
 
 
 def sync_preferences_to_scene_props(context, scene_props):

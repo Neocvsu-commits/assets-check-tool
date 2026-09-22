@@ -144,22 +144,6 @@ def _status_color(status: str):
 _INFO_LIMITS = {"uv_layer_count": 1, "vertex_color_count": 1}
 
 
-def _matrix_layout_metrics(context, check_ids):
-    """矩阵布局度量：返回 (弹窗宽度, left_factor, name_factor)，均由偏好设置尺寸参数计算."""
-    addon = context.preferences.addons.get(__package__)
-    prefs = addon.preferences if addon else None
-    name_w = int(getattr(prefs, "ui_name_width", 210) or 210)
-    face_w = int(getattr(prefs, "ui_face_width", 55) or 55)
-    check_w = int(getattr(prefs, "ui_check_width", 39) or 39)
-    override = int(getattr(prefs, "ui_popup_width", 0) or 0)
-    auto_w = 40 + name_w + face_w + len(check_ids) * check_w
-    popup_w = override if override > 0 else auto_w
-    body_w = max(popup_w - 40, name_w + face_w + 10)
-    left_factor = min(max((name_w + face_w) / float(body_w), 0.05), 0.7)
-    name_factor = name_w / float(name_w + face_w)
-    return popup_w, left_factor, name_factor
-
-
 def _draw_center_label(layout, text, *, translate=True):
     row = layout.row(align=True)
     row.alignment = "CENTER"
@@ -386,8 +370,9 @@ def draw_assets_check_next_content(layout, context):
             matrix_box.label(text="筛选后无结果")
             return
 
-        # 列宽由偏好设置的尺寸参数计算（名称/面数/检查列），弹窗宽度同源
-        _, left_factor, name_factor = _matrix_layout_metrics(context, check_ids)
+        # 与 v1 同构：左侧信息区固定比例，名称/面数内部再按 70/30 划分
+        left_factor = 0.24
+        name_factor = 0.72
         table_col = matrix_box.column(align=True)
 
         menu_map = {
@@ -433,7 +418,6 @@ def draw_assets_check_next_content(layout, context):
 
         def title_cell(parent, first, second, tooltip):
             cell = parent.box().column(align=True)
-            cell.alignment = "CENTER"
             cell.scale_y = 0.8
             for label in (first, second):
                 # 关闭翻译：界面词典会把 UV 等词条译成冗长名称（如 UV纹理坐标）
@@ -480,14 +464,12 @@ def draw_assets_check_next_content(layout, context):
             data_left = data_split.split(factor=name_factor, align=True)
             data_name_box = data_left.box()
             name_row = data_name_box.row(align=True)
-            name_row.alignment = "CENTER"
             active_obj = context.view_layer.objects.active
             is_active = active_obj and active_obj.name == obj_name
             op_pin = name_row.operator("assets_check_next.select_result_object", text="", icon_value=get_icon_id("location-pin.png"), emboss=is_active)
             op_pin.object_name = obj_name
             name_row.label(text=_display_object_name(obj_name), translate=False)
             data_face_box = data_left.box()
-            data_face_box.alignment = "CENTER"
             data_face_box.label(text=str(face_count))
 
             data_right = data_split.row(align=True)
@@ -500,7 +482,6 @@ def draw_assets_check_next_content(layout, context):
 
                 if display_value != "":
                     row = cell.row(align=True)
-                    row.alignment = "CENTER"
                     if cid == "uv_name":
                         op = row.operator(
                             "assets_check_next.cell_tooltip",
@@ -523,7 +504,6 @@ def draw_assets_check_next_content(layout, context):
                 else:
                     status = cell_data.get("status", "WARN") if isinstance(cell_data, dict) else "WARN"
                     col_dot = cell.column(align=True)
-                    col_dot.alignment = "CENTER"
                     col_dot.template_node_socket(color=_status_color(status))
                     spacer = col_dot.column(align=True)
                     spacer.scale_y = 1e-9

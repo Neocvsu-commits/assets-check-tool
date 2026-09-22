@@ -6,7 +6,7 @@ import bpy
 
 
 CHECK_KEYS = (
-    'chk_ngon', 'chk_empty_material_slot', 'chk_transform', 'chk_missing_textures', 'chk_material_count',
+    'chk_ngon', 'chk_empty_material_slot', 'chk_transform', 'chk_missing_textures',
     'chk_uv_bounds', 'chk_uv_overlap', 'chk_uv_name', 'chk_uv_layer_count', 'chk_vertex_color_count',
     'chk_ignore_uv0', 'chk_non_manifold', 'chk_ignore_manifold_open',
     'chk_loose_geometry', 'chk_doubled_vertices', 'chk_poles', 'chk_normal_direction',

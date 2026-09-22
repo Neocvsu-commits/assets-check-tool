@@ -47,7 +47,6 @@ class ASSETSCHECKNEXT_AddonPreferences(bpy.types.AddonPreferences):
     chk_empty_material_slot: bpy.props.BoolProperty(name="空材质槽", default=True)
     chk_transform: bpy.props.BoolProperty(name="变换检查", default=True)
     chk_missing_textures: bpy.props.BoolProperty(name="贴图丢失", default=True)
-    chk_material_count: bpy.props.BoolProperty(name="材质球数量", default=True)
     chk_uv_bounds: bpy.props.BoolProperty(name="UV越界检查", default=True)
     chk_uv_overlap: bpy.props.BoolProperty(name="UV重叠", default=True)
     chk_uv_name: bpy.props.BoolProperty(name="UV名称", default=True)
@@ -72,9 +71,27 @@ class ASSETSCHECKNEXT_AddonPreferences(bpy.types.AddonPreferences):
     chk_ue_vertex_color_naming: bpy.props.BoolProperty(name="命名不合规", default=True)
     chk_object_data_name_match: bpy.props.BoolProperty(name="物体名与网格数据名不匹配", default=True)
 
+    # 界面尺寸参数（像素）：控制检查矩阵列宽与弹窗宽度
+    ui_name_width: bpy.props.IntProperty(
+        name="名称列宽度", default=210, min=60, max=600,
+        description="检查矩阵中物体名称列的宽度（像素）")
+    ui_face_width: bpy.props.IntProperty(
+        name="面数列宽度", default=55, min=30, max=300,
+        description="检查矩阵中面数列的宽度（像素）")
+    ui_check_width: bpy.props.IntProperty(
+        name="检查列宽度", default=39, min=20, max=200,
+        description="每个检查列的宽度（像素），所有检查列等宽")
+    ui_popup_width: bpy.props.IntProperty(
+        name="弹窗宽度", default=0, min=0, max=3000,
+        description="审查弹窗总宽度（像素）；0 表示按上方列宽自动计算")
+
     def draw(self, context):
         from .ui import draw_support_preferences
         self.layout.label(text="检查与报告位于 3D 视图顶栏「检查」")
+        size_box = self.layout.box()
+        size_box.label(text="界面尺寸（像素）", icon="PREFERENCES")
+        for prop_name in ("ui_name_width", "ui_face_width", "ui_check_width", "ui_popup_width"):
+            size_box.prop(self, prop_name)
         draw_support_preferences(self.layout, context)
 
 
@@ -97,7 +114,6 @@ class ASSETSCHECKNEXT_Props(bpy.types.PropertyGroup):
     chk_empty_material_slot: bpy.props.BoolProperty(name="空材质槽", default=True)
     chk_transform: bpy.props.BoolProperty(name="变换检查", default=True)
     chk_missing_textures: bpy.props.BoolProperty(name="贴图丢失", default=True)
-    chk_material_count: bpy.props.BoolProperty(name="材质球数量", default=True)
     chk_uv_bounds: bpy.props.BoolProperty(name="UV越界", default=True)
     chk_uv_overlap: bpy.props.BoolProperty(name="UV重叠", default=True)
     chk_ignore_uv0: bpy.props.BoolProperty(name="豁免UV0(允许重叠/越界)", default=True)

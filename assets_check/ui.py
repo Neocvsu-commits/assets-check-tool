@@ -8,7 +8,6 @@ CHECK_LABELS = {
     "empty_material_slot": "空材质槽",
     "transform": "变换检查",
     "missing_textures": "贴图丢失",
-    "material_count": "材质球数量",
     "uv_bounds": "UV越界",
     "uv_overlap": "UV重叠",
     "non_manifold": "非流形边",
@@ -37,7 +36,6 @@ CHECK_LABELS_MATRIX = {
     "empty_material_slot": "空材",
     "transform": "变换",
     "missing_textures": "贴图",
-    "material_count": "材质数",
     "uv_bounds": "UV越",
     "uv_overlap": "UV叠",
     "non_manifold": "非流",
@@ -66,7 +64,6 @@ CHECK_LABELS_MATRIX_2LINE = {
     "empty_material_slot": ("空材", "质槽"),
     "transform": ("变换", "检查"),
     "missing_textures": ("贴图", "丢失"),
-    "material_count": ("材质", "数量"),
     "uv_bounds": ("UV", "越界"),
     "uv_overlap": ("UV", "重叠"),
     "uv_name": ("UV", "名称"),
@@ -97,7 +94,6 @@ def _enabled_check_ids(cfg):
     mapping = [
         ("chk_empty_material_slot", "empty_material_slot"),
         ("chk_missing_textures", "missing_textures"),
-        ("chk_material_count", "material_count"),
         ("chk_transform", "transform"),
         ("chk_uv_bounds", "uv_bounds"),
         ("chk_uv_overlap", "uv_overlap"),
@@ -144,8 +140,24 @@ def _status_color(status: str):
     return (0.8, 0.8, 0.2, 1.0)
 
 
-# 信息列超过阈值时加黄色提示点：UV多层、顶点色数、材质球数（SOP 不超过20）
-_INFO_LIMITS = {"uv_layer_count": 1, "vertex_color_count": 1, "material_count": 20}
+# 信息列超过阈值时加黄色提示点：UV多层、顶点色数
+_INFO_LIMITS = {"uv_layer_count": 1, "vertex_color_count": 1}
+
+
+def _matrix_layout_metrics(context, check_ids):
+    """矩阵布局度量：返回 (弹窗宽度, left_factor, name_factor)，均由偏好设置尺寸参数计算."""
+    addon = context.preferences.addons.get(__package__)
+    prefs = addon.preferences if addon else None
+    name_w = int(getattr(prefs, "ui_name_width", 210) or 210)
+    face_w = int(getattr(prefs, "ui_face_width", 55) or 55)
+    check_w = int(getattr(prefs, "ui_check_width", 39) or 39)
+    override = int(getattr(prefs, "ui_popup_width", 0) or 0)
+    auto_w = 40 + name_w + face_w + len(check_ids) * check_w
+    popup_w = override if override > 0 else auto_w
+    body_w = max(popup_w - 40, name_w + face_w + 10)
+    left_factor = min(max((name_w + face_w) / float(body_w), 0.05), 0.7)
+    name_factor = name_w / float(name_w + face_w)
+    return popup_w, left_factor, name_factor
 
 
 def _draw_center_label(layout, text, *, translate=True):
@@ -298,7 +310,6 @@ def draw_assets_check_next_content(layout, context):
         mat_flow = mat_box.column_flow(columns=2, align=True)
         mat_flow.prop(cfg, "chk_empty_material_slot")
         mat_flow.prop(cfg, "chk_missing_textures")
-        mat_flow.prop(cfg, "chk_material_count")
 
         uv_box = checks_box.box()
         uv_box.label(text="UV与颜色 (UVs & Colors)", icon="UV")
@@ -375,9 +386,8 @@ def draw_assets_check_next_content(layout, context):
             matrix_box.label(text="筛选后无结果")
             return
 
-        # 与 v1 同构：左侧信息区固定比例（名称/面数收窄给检查列留空间），名称/面数内部再划分
-        left_factor = 0.20
-        name_factor = 0.72
+        # 列宽由偏好设置的尺寸参数计算（名称/面数/检查列），弹窗宽度同源
+        _, left_factor, name_factor = _matrix_layout_metrics(context, check_ids)
         table_col = matrix_box.column(align=True)
 
         menu_map = {

@@ -403,7 +403,6 @@ class ASSETSCHECKNEXT_OT_HeaderTooltip(bpy.types.Operator):
             "面数": "物体的三角面总数量",
             "空材-质槽": "检测：是否存在没有赋予材质的空材质槽",
             "贴图-丢失": "检测：材质节点中引用的贴图文件是否在本地丢失",
-            "材质-数量": "信息：显示物体使用的材质球数量（SOP 建议同一模型不超过 20 个，超出时按黄色提示）",
             "UV-越界": "检测：UV是否超出了标准(0,1)区间（此项不适用于UDIM流程）",
             "UV-重叠": "检测：UV岛屿之间是否存在相互重叠",
             "UV-名称": "UV名称：显示物体的UV层名称",
@@ -886,12 +885,12 @@ class ASSETSCHECKNEXT_OT_OpenPopup(bpy.types.Operator):
 
     @staticmethod
     def _preferred_width(context):
-        """按当前启用的检查列数估算刚刚好的弹窗宽度（全开时文字完整显示）."""
-        from .ui import _enabled_check_ids
+        """弹窗宽度：由偏好设置的尺寸参数计算（ui_popup_width>0 时直接使用）."""
+        from .ui import _enabled_check_ids, _matrix_layout_metrics
         addon = context.preferences.addons.get(__package__)
         cfg = addon.preferences if addon else context.scene.assets_check_next_props
-        columns = len(_enabled_check_ids(cfg))
-        return max(520, int(300 + 39 * columns))
+        width, _, _ = _matrix_layout_metrics(context, _enabled_check_ids(cfg))
+        return max(520, width)
 
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self, width=self._preferred_width(context))

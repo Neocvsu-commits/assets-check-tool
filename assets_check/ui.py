@@ -175,6 +175,26 @@ def _build_result_matrix(results):
     return matrix
 
 
+def _check_column_weights(check_ids):
+    """右侧列基本均分，UV名称列稍宽以容纳 "UVMap.." 缩写."""
+    return [1.6 if cid == "uv_name" else 1.0 for cid in check_ids]
+
+
+def _split_cells(parent, weights):
+    """把一行按权重切分为多个 cell；嵌套 split 保证各行列边界对齐."""
+    cells = []
+    remaining = float(sum(weights)) or 1.0
+    rest = parent
+    for weight in weights[:-1]:
+        factor = max(0.01, min(0.99, weight / remaining))
+        split = rest.split(factor=factor, align=True)
+        cells.append(split.column())
+        rest = split.row()
+        remaining -= weight
+    cells.append(rest)
+    return cells
+
+
 def _iter_matrix_rows(context, ui_state, result_matrix, check_ids):
     rows = []
     name_filter = (ui_state.search_query or "").strip().lower()
@@ -370,6 +390,7 @@ def draw_assets_check_next_content(layout, context):
         left_factor = 0.24
         name_factor = 0.72
         table_col = matrix_box.column(align=True)
+        check_weights = _check_column_weights(check_ids)
 
         menu_map = {
             "empty_material_slot": "ASSETSCHECKNEXT_MT_QF_EmptyMaterial",
@@ -401,13 +422,13 @@ def draw_assets_check_next_content(layout, context):
         menu_left = menu_split.split(factor=name_factor, align=True)
         menu_left.label(text=" ")
         menu_left.label(text=" ")
-        menu_right = menu_split.row(align=True)
-        for cid in check_ids:
+        menu_cells = _split_cells(menu_split.row(align=True), check_weights)
+        for cell_layout, cid in zip(menu_cells, check_ids):
             menu_id = menu_map.get(cid)
             if menu_id:
-                menu_right.menu(menu_id, text="", icon_value=0)
+                cell_layout.menu(menu_id, text="", icon_value=0)
             else:
-                menu_right.label(text=" ")
+                cell_layout.label(text=" ")
 
         header_split = table_col.split(factor=left_factor, align=True)
         header_left = header_split.split(factor=name_factor, align=True)
@@ -422,10 +443,10 @@ def draw_assets_check_next_content(layout, context):
 
         title_cell(header_left, "名称", "", "名称")
         title_cell(header_left, "面数", "", "面数")
-        header_right = header_split.row(align=True)
-        for cid in check_ids:
+        header_cells = _split_cells(header_split.row(align=True), check_weights)
+        for cell_layout, cid in zip(header_cells, check_ids):
             first, second = CHECK_LABELS_MATRIX_2LINE.get(cid, (CHECK_LABELS_MATRIX.get(cid, cid), ""))
-            title_cell(header_right, first, second, f"{first}-{second}")
+            title_cell(cell_layout, first, second, f"{first}-{second}")
 
         # 第二横条：排序箭头
         sort_split = table_col.split(factor=left_factor, align=True)
@@ -444,9 +465,9 @@ def draw_assets_check_next_content(layout, context):
             emboss=False,
         ).sort_col = 1
 
-        sort_right = sort_split.row(align=True)
-        for idx, cid in enumerate(check_ids):
-            sbox = sort_right.box()
+        sort_cells = _split_cells(sort_split.row(align=True), check_weights)
+        for idx, cell_layout in enumerate(sort_cells):
+            sbox = cell_layout.box()
             sbox.operator(
                 "assets_check_next.sort_matrix", text=" ",
                 icon_value=get_icon_id("caret-down-outline.png") if (ui_state.sort_col == idx + 2 and not ui_state.sort_reverse) else (get_icon_id("caret-up-outline.png") if ui_state.sort_col == idx + 2 else 0),
@@ -468,10 +489,10 @@ def draw_assets_check_next_content(layout, context):
             data_face_box = data_left.box()
             data_face_box.label(text=str(face_count))
 
-            data_right = data_split.row(align=True)
-            for cid in check_ids:
+            data_cells = _split_cells(data_split.row(align=True), check_weights)
+            for cell_layout, cid in zip(data_cells, check_ids):
                 cell_data = checks.get(cid, {})
-                cell = data_right.box()
+                cell = cell_layout.box()
                 display_value = ""
                 if isinstance(cell_data, dict):
                     display_value = str(cell_data.get("display_value", ""))
@@ -479,11 +500,13 @@ def draw_assets_check_next_content(layout, context):
                 if display_value != "":
                     row = cell.row(align=True)
                     if cid == "uv_name":
-                        # 按钮文本即完整层名：列内截断时，悬浮提示自动显示完整文本
-                        row.operator(
+                        op = row.operator(
                             "assets_check_next.cell_tooltip",
                             text=display_value, emboss=False, translate=False,
                         )
+                        # 缩写与完整列表不同（多套UV）时，悬浮第二行显示全部层名
+                        full = str(cell_data.get("message", ""))
+                        op.tooltip = full if full != display_value else ""
                     else:
                         row.label(text=display_value, translate=False)
                     if cid in {"uv_layer_count", "vertex_color_count"}:

@@ -433,11 +433,17 @@ class ASSETSCHECKNEXT_OT_HeaderTooltip(bpy.types.Operator):
         return {"FINISHED"}
 
 
-# 文本单元格：悬浮第一行为按钮上的完整名称，第二行为固定说明（避免出现"无文档记载的操作项"占位）
+# 文本单元格：悬浮第一行为按钮上的简称，第二行显示动态完整内容（未提供时用固定说明）
 class ASSETSCHECKNEXT_OT_CellTooltip(bpy.types.Operator):
     bl_idname = "assets_check_next.cell_tooltip"
     bl_label = ""
-    bl_description = "UV贴图名称"
+    bl_description = ""
+
+    tooltip: bpy.props.StringProperty()
+
+    @classmethod
+    def description(cls, context, properties):
+        return properties.tooltip or "UV贴图名称"
 
     def execute(self, context):
         return {"FINISHED"}

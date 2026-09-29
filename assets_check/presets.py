@@ -141,3 +141,6 @@ def sync_preferences_to_scene_props(context, scene_props):
     addon = context.preferences.addons.get(__package__)
     if addon:
         apply_preset_data(scene_props, collect_preset_data(addon.preferences))
+        # 模型类型独立于检查预设，切换预设不改变材质命名模式。
+        if scene_props.is_ue_model != addon.preferences.is_ue_model:
+            scene_props.is_ue_model = addon.preferences.is_ue_model

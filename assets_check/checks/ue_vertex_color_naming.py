@@ -17,6 +17,7 @@ def _fail(message):
 
 def run(obj, context, props):
     warnings = []
+    prefix = "MI_" if getattr(props, "is_ue_model", True) else "M_"
 
     if _dup_suffix(obj.name):
         warnings.append(f"物体名带 .001 之类的重复后缀：{obj.name}")
@@ -31,9 +32,8 @@ def run(obj, context, props):
             continue
         if _dup_suffix(mat.name):
             warnings.append(f"材质名带 .001 之类的重复后缀：{mat.name}")
-        # SOP 1.4 / 1.6: all delivery materials use MI_, regardless of preset.
-        if not mat.name.startswith("MI_"):
-            return _fail(f"材质命名不合规，应为 MI_<材质名>：{mat.name}")
+        if not mat.name.startswith(prefix):
+            return _fail(f"材质命名不合规，应为 {prefix}<材质名>：{mat.name}")
         if not _NAME.fullmatch(mat.name):
             warnings.append(f"材质名含非支持字符：{mat.name}")
         if mat.use_nodes and mat.node_tree:

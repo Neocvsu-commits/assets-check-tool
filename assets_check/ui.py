@@ -246,18 +246,13 @@ def _display_object_name(raw_name: str) -> str:
     return raw_name or ""
 
 
-def _draw_update_banner(layout, cfg=None):
+def _draw_update_banner(layout):
     """Always show the installed version and the update entry in the working UI."""
     from . import bl_info
     from .update_checker import get_update_info, get_check_status
 
-    header = layout.row(align=True)
-    row = header.row(align=True)
+    row = layout.row(align=True)
     row.alignment = "LEFT"
-    if cfg is not None:
-        mode = header.row(align=True)
-        mode.alignment = "RIGHT"
-        mode.prop(cfg, "is_ue_model", text="UE模型", toggle=True)
     row.label(text="v" + ".".join(map(str, bl_info["version"])), icon="INFO")
     row.operator("assets_check_next.check_update", text="检查更新", icon="FILE_REFRESH")
     status = get_check_status("Neocvsu-commits", "assets-check-tool")
@@ -288,7 +283,7 @@ def draw_assets_check_next_content(layout, context):
     ui_state = scene.ac_ui_state
     addon = context.preferences.addons.get(__package__)
     cfg = addon.preferences if addon else props
-    _draw_update_banner(layout, cfg)
+    _draw_update_banner(layout)
     results = scene.assets_check_next_results
 
     box_presets = layout.box()

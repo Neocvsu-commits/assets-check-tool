@@ -398,10 +398,6 @@ class ASSETSCHECKNEXT_OT_HeaderTooltip(bpy.types.Operator):
 
     @classmethod
     def description(cls, context, properties):
-        addon = context.preferences.addons.get(__package__)
-        cfg = addon.preferences if addon else context.scene.assets_check_next_props
-        prefix = "MI_" if cfg.is_ue_model else "M_"
-        model_type = "UE模型" if cfg.is_ue_model else "非UE模型"
         tt_dict = {
             "名称": "物体的名称",
             "面数": "物体的三角面总数量",
@@ -429,7 +425,7 @@ class ASSETSCHECKNEXT_OT_HeaderTooltip(bpy.types.Operator):
             "动画-检查": "检测：物体是否携带有动画时间轴的关键帧数据",
             "顶点-权重": "检测：静态网格体是否错误绑定了多余的顶点组(Vertex Groups)",
             "碰撞-检查": "检测：场景中是否存在与该物体绑定的UCX/UBX等UE专属简易碰撞体，且面数是否超标(>64面)",
-            "命名-规范": f"当前为{model_type}：物体 SM_物体名，材质 {prefix}材质名，贴图 T_；右上角UE模型开关：开启 MI_ / 关闭 M_；.001 等重复后缀与非支持字符按黄色提示",
+            "命名-规范": "物体 SM_物体名，材质 M_材质名，贴图 T_；.001 等重复后缀与非支持字符按黄色提示",
             "名数-匹配": "检测：物体名称是否与其网格数据块（Object Data）名称一致（忽略 .001 等重复后缀）。在 Blender 中复制物体时网格数据名会保留原名，导致物体名和数据名不匹配",
         }
         return tt_dict.get(properties.col_name, properties.col_name)
@@ -536,9 +532,8 @@ class ASSETSCHECKNEXT_OT_QuickFixAction(bpy.types.Operator):
                     elif self.action == "AUTOFILL_NAMING_PREFIX":
                         if not obj.name.startswith("SM_"):
                             obj.name = f"SM_{obj.name}"
-                        addon = context.preferences.addons.get(__package__)
-                        cfg = addon.preferences if addon else context.scene.assets_check_next_props
-                        prefix = "MI_" if cfg.is_ue_model else "M_"
+                        # 材质统一 M_ 前缀，旧的 MI_ 一并改成 M_（新规范不再使用 MI_）
+                        prefix = "M_"
                         for slot in obj.material_slots:
                             mat = slot.material
                             if mat and not mat.name.startswith(prefix):

@@ -89,7 +89,7 @@ def run_checks_and_store(scene, context):
     preset_name = props.presets_collection[index].name if 0 <= index < len(props.presets_collection) else "自定义检查"
     props.results_json = json.dumps({
         "rows": all_rows, "models": models, "checked_at": props.last_run_at,
-        "preset_name": preset_name, "check_config": {**collect_preset_data(props), "is_ue_model": props.is_ue_model},
+        "preset_name": preset_name, "check_config": collect_preset_data(props),
     }, ensure_ascii=False)
 
     return len(mesh_objects), len(all_rows)

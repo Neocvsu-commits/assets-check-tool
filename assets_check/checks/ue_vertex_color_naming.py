@@ -1,6 +1,6 @@
 import re
 
-# Blender 重名自动后缀，如 Wall.001 / MI_Wood.002
+# Blender 重名自动后缀，如 Wall.001 / M_Wood.002
 _DUP_SUFFIX = re.compile(r'\.\d+$')
 # 支持命名多样性：字母、数字、下划线、横杠、点、正反斜杠（前缀规则单独校验）
 _NAME = re.compile(r'^[A-Za-z0-9_\-./\\]+$')
@@ -17,7 +17,8 @@ def _fail(message):
 
 def run(obj, context, props):
     warnings = []
-    prefix = "MI_" if getattr(props, "is_ue_model", True) else "M_"
+    # UE 材质命名规范已统一为 M_ 开头，不再区分模型类型
+    prefix = "M_"
 
     if _dup_suffix(obj.name):
         warnings.append(f"物体名带 .001 之类的重复后缀：{obj.name}")

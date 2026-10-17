@@ -11,7 +11,7 @@ MODEL_COLUMNS = [
 SOP_REQUIREMENTS = [
     ('拓扑结构', '模型面都三角化导出，确保没有面重叠、软硬边问题、废点、孤立点、五边及以上面、反面问题'),
     ('模型尺寸', '建模时尽量尺寸为10的倍数（单位：cm）'),
-    ('模型文件命名前缀', '以SM_开头，采用英文、拼音或缩写；材质统一 MI_，贴图 T_；不能出现 .001 之类字样'),
+    ('模型文件命名前缀', '以SM_开头，采用英文、拼音或缩写；材质统一 M_，贴图 T_；不能出现 .001 之类字样'),
     ('uv拆分', '是否有明显拉伸和尺寸不统一问题'),
     ('纹理质量', '命名是否正确   T_材质球名称_D   T_材质球名称_N   T_材质球名称_ORM\n是否为标准尺寸   512*512\n1024*1024\n……'),
     ('材质球数量', '同一模型不超过20个'),
@@ -71,7 +71,7 @@ def build_model_reports(snapshot, defaults):
         raise ValueError('没有模型信息快照，请执行检查后导出模型报告')
     if any(model.get('snapshot_version') != 2 for model in models):
         raise ValueError('旧版检查结果缺少七项自查所需数据，请重新检查后导出')
-    prefix = 'MI_' if snapshot.get('check_config', {}).get('is_ue_model', True) else 'M_'
+    prefix = 'M_'
     checks = snapshot.get('rows', [])
     result = []
     for model in models:
@@ -82,7 +82,6 @@ def build_model_reports(snapshot, defaults):
 
         def add(index, status, notes):
             title, requirement = SOP_REQUIREMENTS[index - 1]
-            requirement = requirement.replace('材质统一 MI_', f'材质使用 {prefix}')
             rows.append([index, title, requirement, status, '；'.join(notes)])
 
         topology = ['ngon', 'loose_geometry', 'doubled_vertices', 'normal_direction', 'zero_edges', 'self_intersection']
@@ -131,7 +130,7 @@ def build_model_reports(snapshot, defaults):
             texture_problems.append(by_id['missing_textures']['message'])
         invalid_materials = [mat for mat in model['material_names'] if not re.fullmatch(re.escape(prefix) + r'[A-Za-z0-9_]+', mat)]
         if invalid_materials:
-            texture_problems.append(f'当前模型类型材质名应为{prefix}：' + '、'.join(invalid_materials))
+            texture_problems.append(f'材质名应为{prefix}：' + '、'.join(invalid_materials))
         if not model['textures']:
             texture_notes.append('源模型未关联贴图；FBX允许纯色占位材质，请核对独立贴图或复用UE材质')
         texture_notes.append('贴图与材质对应关系、Normal DirectX及ORM通道内容待人工复核')

@@ -16,18 +16,10 @@ def _update_check_toggle(self, context):
     schedule_auto_check()
 
 
-def ue_model_property():
-    return bpy.props.BoolProperty(
-        name="UE模型", default=True,
-        description="开启（高亮）：UE模型材质使用 MI_；关闭：非UE模型材质使用 M_。切换后自动重新检查",
-        update=_update_check_toggle,
-    )
-
-
 def naming_standard_property():
     return bpy.props.EnumProperty(
         name="命名规范",
-        items=[("PROJECT", "项目资产", "物体 SM_物体名，材质由UE模型开关决定（开启 MI_，关闭 M_），贴图 T_；名称支持多样符号，但不能出现 .001 等重复后缀")],
+        items=[("PROJECT", "项目资产", "物体 SM_物体名，材质 M_材质名，贴图 T_；名称支持多样符号，但不能出现 .001 等重复后缀")],
         default="PROJECT",
     )
 
@@ -56,7 +48,6 @@ class ASSETSCHECKNEXT_AddonPreferences(bpy.types.AddonPreferences):
     bl_idname = __package__
 
     naming_standard: naming_standard_property()
-    is_ue_model: ue_model_property()
 
     chk_ngon: bpy.props.BoolProperty(name="N多边面", default=True, update=_update_check_toggle)
     chk_empty_material_slot: bpy.props.BoolProperty(name="空材质槽", default=True, update=_update_check_toggle)
@@ -126,7 +117,6 @@ class ASSETSCHECKNEXT_Props(bpy.types.PropertyGroup):
 
     # 检查项开关（先提供核心高频项）
     naming_standard: naming_standard_property()
-    is_ue_model: ue_model_property()
 
     chk_ngon: bpy.props.BoolProperty(name="N多边面", default=True)
     chk_empty_material_slot: bpy.props.BoolProperty(name="空材质槽", default=True)

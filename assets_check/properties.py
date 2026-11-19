@@ -10,6 +10,11 @@ from .presets import (
 )
 
 
+_UV0_HINT = "UV0 越界或重叠时只作警告"
+_OPEN_EDGE_HINT = "检查非流形边时，忽略开放边界和没有相邻面的边"
+_NAMING_HINT = "检查物体、材质和贴图的前缀、字符及重复后缀"
+
+
 def _update_check_toggle(self, context):
     """切换检查项开关后自动触发开始检查（去抖合并连续改动）."""
     from .services import schedule_auto_check
@@ -59,9 +64,9 @@ class ASSETSCHECKNEXT_AddonPreferences(bpy.types.AddonPreferences):
     chk_uv_name: bpy.props.BoolProperty(name="UV名称", default=True, update=_update_check_toggle)
     chk_uv_layer_count: bpy.props.BoolProperty(name="UV数量", default=True, update=_update_check_toggle)
     chk_vertex_color_count: bpy.props.BoolProperty(name="顶点色", default=True, update=_update_check_toggle)
-    chk_ignore_uv0: bpy.props.BoolProperty(name="豁免UV0(允许重叠/越界)", default=True, update=_update_check_toggle)
+    chk_ignore_uv0: bpy.props.BoolProperty(name="豁免 UV0", description=_UV0_HINT, default=True, update=_update_check_toggle)
     chk_non_manifold: bpy.props.BoolProperty(name="非流体边", default=True, update=_update_check_toggle)
-    chk_ignore_manifold_open: bpy.props.BoolProperty(name="豁免开放边界(面片)", default=True, update=_update_check_toggle)
+    chk_ignore_manifold_open: bpy.props.BoolProperty(name="豁免开放边界", description=_OPEN_EDGE_HINT, default=True, update=_update_check_toggle)
     chk_loose_geometry: bpy.props.BoolProperty(name="孤立/游离点边", default=True, update=_update_check_toggle)
     chk_doubled_vertices: bpy.props.BoolProperty(name="重叠点", default=True, update=_update_check_toggle)
     chk_poles: bpy.props.BoolProperty(name="极点(>6边)", default=True, update=_update_check_toggle)
@@ -75,7 +80,7 @@ class ASSETSCHECKNEXT_AddonPreferences(bpy.types.AddonPreferences):
     chk_modifier: bpy.props.BoolProperty(name="包含修改器", default=True, update=_update_check_toggle)
     chk_animation: bpy.props.BoolProperty(name="包含动画数据", default=True, update=_update_check_toggle)
     chk_vertex_weight: bpy.props.BoolProperty(name="顶点重量/组检查", default=True, update=_update_check_toggle)
-    chk_ue_vertex_color_naming: bpy.props.BoolProperty(name="命名不合规", default=True, update=_update_check_toggle)
+    chk_ue_vertex_color_naming: bpy.props.BoolProperty(name="命名不合规", description=_NAMING_HINT, default=True, update=_update_check_toggle)
     chk_object_data_name_match: bpy.props.BoolProperty(name="物体名与网格数据名不匹配", default=True, update=_update_check_toggle)
 
     # 界面尺寸参数（像素）：控制检查矩阵列宽与弹窗宽度
@@ -125,9 +130,9 @@ class ASSETSCHECKNEXT_Props(bpy.types.PropertyGroup):
     chk_material_count: bpy.props.BoolProperty(name="材质球数量", default=True)
     chk_uv_bounds: bpy.props.BoolProperty(name="UV越界", default=True)
     chk_uv_overlap: bpy.props.BoolProperty(name="UV重叠", default=True)
-    chk_ignore_uv0: bpy.props.BoolProperty(name="豁免UV0(允许重叠/越界)", default=True)
+    chk_ignore_uv0: bpy.props.BoolProperty(name="豁免 UV0", description=_UV0_HINT, default=True)
     chk_non_manifold: bpy.props.BoolProperty(name="非流形边", default=True)
-    chk_ignore_manifold_open: bpy.props.BoolProperty(name="豁免开放边界(面片)", default=True)
+    chk_ignore_manifold_open: bpy.props.BoolProperty(name="豁免开放边界", description=_OPEN_EDGE_HINT, default=True)
     chk_loose_geometry: bpy.props.BoolProperty(name="孤立/游离点边", default=True)
     chk_doubled_vertices: bpy.props.BoolProperty(name="重叠顶点", default=True)
     chk_poles: bpy.props.BoolProperty(name="极点星点", default=True)
@@ -140,7 +145,7 @@ class ASSETSCHECKNEXT_Props(bpy.types.PropertyGroup):
     chk_uv_name: bpy.props.BoolProperty(name="UV名称", default=True)
     chk_uv_layer_count: bpy.props.BoolProperty(name="UV数量", default=True)
     chk_vertex_color_count: bpy.props.BoolProperty(name="顶点色", default=True)
-    chk_ue_vertex_color_naming: bpy.props.BoolProperty(name="命名不合规", default=True)
+    chk_ue_vertex_color_naming: bpy.props.BoolProperty(name="命名不合规", description=_NAMING_HINT, default=True)
 
     chk_apply_scale: bpy.props.BoolProperty(name="缩放未应用", default=True)
     chk_transform_zero: bpy.props.BoolProperty(name="变换未归零", default=True)

@@ -1,7 +1,7 @@
 bl_info = {
     "name": "资产审查",
     "author": "Neo",
-    "version": (3, 3, 30),
+    "version": (3, 3, 34),
     "blender": (4, 2, 0),
     "location": "3D 视图 > 顶栏「检查」",
     "description": "资产网格与数据检查、快速修复与报告导出（正式版）",
@@ -162,18 +162,7 @@ def register():
     def _delayed_init(_dummy=None):
         try:
             props = bpy.context.scene.assets_check_next_props
-            properties.sync_preset_collection(props)
-
-            # 安装后和打开工程时同步默认/个人预设。
-            presets = properties.load_presets()
-            idx = props.active_preset_index
-            if 0 <= idx < len(props.presets_collection):
-                name = props.presets_collection[idx].name
-                if name in presets:
-                    properties.apply_preset_data(props, presets[name])
-                    addon = bpy.context.preferences.addons.get(__package__)
-                    if addon and addon.preferences:
-                        properties.apply_preset_data(addon.preferences, presets[name])
+            properties.sync_preset_collection(props, select_default=True)
 
             # 强制 UI 刷新
             for window in bpy.context.window_manager.windows:

@@ -15,6 +15,7 @@ CHECK_KEYS = (
     'chk_vertex_weight', 'chk_ue_vertex_color_naming', 'chk_object_data_name_match',
 )
 PRESET_KEYS = (*CHECK_KEYS, 'naming_standard')
+DEFAULT_PRESET = '资产库模型（独立贴图）'
 ALL_CHECKS = {**dict.fromkeys(CHECK_KEYS, True), 'naming_standard': 'PROJECT'}
 BUILTIN_PRESETS = {
     '项目模型': {
@@ -23,7 +24,7 @@ BUILTIN_PRESETS = {
         'chk_transform': False, 'chk_transform_zero': False, 'chk_pivot_position': False,
         'chk_object_data_name_match': False, 'chk_poles': False,
     },
-    '资产库模型（独立贴图）': {**ALL_CHECKS, 'chk_ignore_uv0': False},
+    DEFAULT_PRESET: {**ALL_CHECKS, 'chk_ignore_uv0': False},
     '资产库模型（四方贴图）': dict(ALL_CHECKS),
 }
 
@@ -113,14 +114,15 @@ def apply_preset_data(props, data):
             setattr(props, key, data[key])
 
 
-def sync_preset_collection(props):
+def sync_preset_collection(props, *, select_default=False):
     index = props.active_preset_index
     selected = props.presets_collection[index].name if 0 <= index < len(props.presets_collection) else ''
     names = list(load_presets())
     props.presets_collection.clear()
     for name in names:
         props.presets_collection.add().name = name
-    props.active_preset_index = names.index(selected) if selected in names else 0
+    name = selected if not select_default and selected in names else DEFAULT_PRESET
+    props.active_preset_index = names.index(name)
 
 
 def update_active_preset_index(self, context):

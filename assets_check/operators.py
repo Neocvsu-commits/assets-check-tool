@@ -914,6 +914,9 @@ class ASSETSCHECKNEXT_OT_OpenPopup(bpy.types.Operator):
         return max(520, width)
 
     def invoke(self, context, event):
+        props = context.scene.assets_check_next_props
+        if not props.presets_collection:
+            sync_preset_collection(props)
         return context.window_manager.invoke_props_dialog(self, width=self._preferred_width(context))
 
     def execute(self, context):

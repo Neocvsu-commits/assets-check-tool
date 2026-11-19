@@ -247,33 +247,95 @@ def _display_object_name(raw_name: str) -> str:
 
 
 def _draw_update_banner(layout):
-    """Always show the installed version and the update entry in the working UI."""
     from . import bl_info
     from .update_checker import get_update_info, get_check_status
 
+    repo = ("Neocvsu-commits", "assets-check-tool")
+    state = get_check_status(*repo).get("status")
+    text, icon = {
+        "checking": ("检查中…", "SORTTIME"),
+        "no_update": ("已是最新版", "CHECKMARK"),
+        "error": ("检查失败，重试", "ERROR"),
+        "no_release": ("暂无发布版本", "INFO"),
+    }.get(state, ("检查更新", "FILE_REFRESH"))
     row = layout.row(align=True)
     row.alignment = "LEFT"
-    row.label(text="v" + ".".join(map(str, bl_info["version"])), icon="INFO")
-    row.operator("assets_check_next.check_update", text="检查更新", icon="FILE_REFRESH")
-    status = get_check_status("Neocvsu-commits", "assets-check-tool")
-    state = status.get("status", "pending")
-    if state == "checking":
-        row.label(text="检查中…", icon="SORTTIME")
-    elif state == "no_update":
-        row.label(text="已是最新版", icon="CHECKMARK")
-    elif state == "error":
-        layout.label(text="更新检查失败，请重试", icon="ERROR")
-    elif state == "no_release":
-        row.label(text="暂无发布版本", icon="INFO")
-
-    info = get_update_info("Neocvsu-commits", "assets-check-tool")
+    row.label(text="v" + ".".join(map(str, bl_info["version"])))
+    info = get_update_info(*repo)
+    row.operator("assets_check_next.check_update", text="" if info else text, icon=icon)
     if info:
-        update_row = layout.row(align=True)
-        update_row.alert = True
-        update_row.label(text=f"可更新至 v{info['latest_version']}", icon="IMPORT")
-        update_row.operator("assets_check_next.install_update", text="一键更新", icon="IMPORT")
-        update_row.operator("wm.url_open", text="更新说明", icon="URL").url = info["html_url"]
+        row.operator("assets_check_next.install_update", text=f"更新至 v{info['latest_version']}", icon="IMPORT")
+        row.operator("wm.url_open", text="更新说明", icon="URL").url = info["html_url"]
 
+
+
+_CHECK_OPTIONS = {
+    "MATERIAL": (
+        ("chk_empty_material_slot", "空材质槽"),
+        ("chk_missing_textures", "丢失贴图"),
+        ("chk_material_count", "材质球数量"),
+    ),
+    "UV": (
+        ("chk_uv_bounds", "UV 越界"),
+        ("chk_uv_overlap", "UV 重叠"),
+        ("chk_uv_name", "UV 名称"),
+        ("chk_uv_layer_count", "UV 层数"),
+        ("chk_vertex_color_count", "顶点色层数"),
+        ("chk_ignore_uv0", "豁免 UV0"),
+    ),
+    "GEOMETRY": (
+        ("chk_non_manifold", "非流形边"),
+        ("chk_ignore_manifold_open", "豁免开放边界"),
+        ("chk_ngon", "N 边面"),
+        ("chk_poles", "极点（>6 边）"),
+        ("chk_loose_geometry", "游离点边"),
+        ("chk_doubled_vertices", "重叠顶点"),
+        ("chk_normal_direction", "法线方向"),
+        ("chk_nonplanar_faces", "不平整面"),
+        ("chk_zero_edges", "零长度边"),
+        ("chk_self_intersection", "面自相交"),
+    ),
+    "OBJECT": (
+        ("chk_apply_scale", "缩放未应用"),
+        ("chk_transform_zero", "位移与旋转未归零"),
+        ("chk_transform", "变换未应用"),
+        ("chk_pivot_position", "轴心位置"),
+        ("chk_modifier", "修改器"),
+        ("chk_animation", "动画数据"),
+        ("chk_vertex_weight", "顶点组与权重"),
+    ),
+    "NAMING": (
+        ("chk_ue_vertex_color_naming", "资产命名规范"),
+        ("chk_object_data_name_match", "物体与网格同名"),
+    ),
+}
+
+
+_CHECK_COLUMNS = (
+    (("MATERIAL", "材质与贴图", "COLLECTION_COLOR_03"), ("UV", "UV 与顶点色", "COLLECTION_COLOR_05")),
+    (("GEOMETRY", "几何", "COLLECTION_COLOR_04"),),
+    (("OBJECT", "物体", "COLLECTION_COLOR_02"), ("NAMING", "命名", "COLLECTION_COLOR_06")),
+)
+
+
+def _draw_check_options(layout, ui_state, cfg):
+    box = layout.box()
+    header = box.row(align=True)
+    header.alignment = "LEFT"
+    header.prop(ui_state, "show_config", text="自定义检查", emboss=False,
+                icon="TRIA_DOWN" if ui_state.show_config else "TRIA_RIGHT")
+    if not ui_state.show_config:
+        return
+
+    grid = box.grid_flow(row_major=True, columns=3, even_columns=True)
+    for groups in _CHECK_COLUMNS:
+        col = grid.column(align=True)
+        for index, (group, title, icon) in enumerate(groups):
+            if index:
+                col.separator()
+            col.label(text=title, icon=icon, translate=False)
+            for prop_name, label in _CHECK_OPTIONS[group]:
+                col.prop(cfg, prop_name, text=label, translate=False)
 
 
 def draw_assets_check_next_content(layout, context):
@@ -304,56 +366,7 @@ def draw_assets_check_next_content(layout, context):
     col_preset_ops.operator("assets_check_next.preset_move_down", text="", icon="TRIA_DOWN")
     col_preset_ops.operator("assets_check_next.preset_remove_active", text="", icon="X")
 
-    checks_box = layout.box()
-    header_row = checks_box.row(align=True)
-    header_row.prop(ui_state, "show_config", text="", icon="TRIA_DOWN" if ui_state.show_config else "TRIA_RIGHT", emboss=False)
-    header_row.label(text="自定义检查")
-    if ui_state.show_config:
-        mat_box = checks_box.box()
-        mat_box.label(text="材质与贴图 (Materials)", icon="MATERIAL")
-        mat_flow = mat_box.column_flow(columns=2, align=True)
-        mat_flow.prop(cfg, "chk_empty_material_slot")
-        mat_flow.prop(cfg, "chk_missing_textures")
-        mat_flow.prop(cfg, "chk_material_count")
-
-        uv_box = checks_box.box()
-        uv_box.label(text="UV与颜色 (UVs & Colors)", icon="UV")
-        uv_flow = uv_box.column_flow(columns=2, align=True)
-        uv_flow.prop(cfg, "chk_uv_bounds")
-        uv_flow.prop(cfg, "chk_uv_overlap")
-        uv_flow.prop(cfg, "chk_uv_name")
-        uv_flow.prop(cfg, "chk_uv_layer_count")
-        uv_flow.prop(cfg, "chk_vertex_color_count")
-        uv_flow.prop(cfg, "chk_ignore_uv0")
-
-        topo_box = checks_box.box()
-        topo_box.label(text="拓扑与几何 (Topology & Geometry)", icon="MESH_DATA")
-        topo_flow = topo_box.column_flow(columns=2, align=True)
-        topo_flow.prop(cfg, "chk_ngon")
-        topo_flow.prop(cfg, "chk_non_manifold")
-        topo_flow.prop(cfg, "chk_ignore_manifold_open")
-        topo_flow.prop(cfg, "chk_loose_geometry")
-        topo_flow.prop(cfg, "chk_doubled_vertices")
-        topo_flow.prop(cfg, "chk_poles")
-        topo_flow.prop(cfg, "chk_normal_direction")
-        topo_flow.prop(cfg, "chk_nonplanar_faces")
-        topo_flow.prop(cfg, "chk_zero_edges")
-        topo_flow.prop(cfg, "chk_self_intersection")
-
-        obj_box = checks_box.box()
-        obj_box.label(text="物体与数据 (Object & Data)", icon="OBJECT_DATA")
-        obj_flow = obj_box.column_flow(columns=2, align=True)
-        obj_flow.prop(cfg, "chk_apply_scale")
-        obj_flow.prop(cfg, "chk_transform_zero")
-        obj_flow.prop(cfg, "chk_pivot_position")
-        obj_flow.prop(cfg, "chk_modifier")
-        obj_flow.prop(cfg, "chk_animation")
-        obj_flow.prop(cfg, "chk_vertex_weight")
-        obj_flow.prop(cfg, "chk_object_data_name_match")
-
-        naming_box = checks_box.box()
-        naming_box.label(text="命名规范 (Naming)", icon="SYNTAX_OFF")
-        naming_box.prop(cfg, "chk_ue_vertex_color_naming")
+    _draw_check_options(layout, ui_state, cfg)
 
     btn_col = layout.column(align=False)
     btn_col.scale_y = 1.2
